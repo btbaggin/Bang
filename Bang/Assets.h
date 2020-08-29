@@ -1,0 +1,224 @@
+#pragma once
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb\stb_truetype.h"
+#include "typedefs.h"
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_GIF
+#include "stb\stb_image.h"
+
+enum SOUND_STATUS : u8
+{
+	SOUND_STATUS_Play,
+	SOUND_STATUS_Pause,
+	SOUND_STATUS_Stop,
+	SOUND_STATUS_Loop
+};
+
+struct PlayingSound
+{
+	float volume;
+	List<s16> samples;
+	u32 samples_played;
+	PlayingSound* next;
+
+	SOUND_STATUS status;
+};
+
+struct Sound
+{
+	u32 channels;
+	List<s16> samples;
+};
+
+
+enum ASSET_STATE
+{
+	ASSET_STATE_Unloaded,
+	ASSET_STATE_Queued,
+	ASSET_STATE_Loaded
+};
+
+enum ASSET_TYPES : u8
+{
+	ASSET_TYPE_Bitmap,
+	ASSET_TYPE_TexturePack,
+	ASSET_TYPE_Font,
+	ASSET_TYPE_Sound,
+};
+
+enum BITMAPS : u8
+{
+	//Unpacked textures go here
+	BITMAP_None,
+	BITMAP_Title,
+	BITMAP_MainMenu1,
+	BITMAP_MainMenu2,
+	BITMAP_MainMenu3,
+	BITMAP_MainMenu4,
+	BITMAP_MainMenu5,
+	BITMAP_Character,
+	BITMAP_Sheriff,
+	BITMAP_Deputy,
+	BITMAP_Outlaw,
+	BITMAP_Renegade,
+	BITMAP_Unknown,
+	BITMAP_TexturePack,
+
+	BITMAP_COUNT
+};
+
+enum FONTS : u8
+{
+	FONT_Normal,
+	FONT_Debug,
+	FONT_Title,
+
+	FONT_COUNT
+};
+
+enum SOUNDS : u8
+{
+	SOUND_Beep,
+	SOUND_Walking,
+	SOUND_COUNT
+};
+
+struct Task
+{
+	MemoryStack* arena;
+	TemporaryMemoryHandle reset;
+	bool is_used;
+};
+
+typedef void TaskCompleteCallback(void* pData);
+struct TaskCallback
+{
+	TaskCompleteCallback* callback;
+	void* data;
+};
+
+struct TaskCallbackQueue
+{
+	TaskCallback callbacks[2][32];
+	u64 i;
+};
+
+struct FontInfo
+{
+	float size;
+	u32 atlasWidth;
+	u32 atlasHeight;
+	stbtt_packedchar* charInfo;
+	float baseline;
+	u8* data;
+	u32 texture;
+};
+
+struct Bitmap
+{
+	s32 width;
+	s32 height;
+	s32 channels;
+	u32 texture;
+	v2 uv_min;
+	v2 uv_max;
+	u8* data;
+};
+
+struct ParalaxBitmap
+{
+	u32 layers;
+	BITMAPS bitmaps[5];
+	v2 position[5];
+	float speed;
+};
+
+struct AnimatedBitmap
+{
+	BITMAPS bitmap;
+	u32 animation_count;
+	u32 current_animation;
+	u32 current_index;
+	u32* animation_lengths;
+	v2 frame_size;
+	float frame_time;
+	float frame_duration;
+};
+
+struct AssetSlot
+{
+	u32 state;
+	u64 last_requested;
+	union 
+	{
+		Bitmap* bitmap;
+		FontInfo* font;
+		Sound* sound;
+	};
+	float size;
+
+	ASSET_TYPES type;
+	const char* load_path;
+};
+
+struct Assets
+{
+	AssetSlot fonts[FONT_COUNT];
+	AssetSlot bitmaps[BITMAP_COUNT];
+	AssetSlot sounds[SOUND_COUNT];
+	u32 blank_texture;
+
+	MemoryPool* memory;
+};
+
+struct LoadAssetWork
+{
+	Assets* assets;
+	TaskCallbackQueue* queue;
+	AssetSlot* slot;
+	char load_info[MAX_PATH];
+};
+
+struct PackedTextureEntry
+{
+	BITMAPS bitmap;
+	const char* file;
+};
+
+struct PackedTexture
+{
+	//PackedTextureEntry textures[BITMAP_COUNT - BITMAP_TexturePack - 1];
+
+	const char* image;
+	const char* config;
+};
+
+struct TextureAtlasWork
+{
+	Bitmap* bitmap;
+	PackedTexture* atlas;
+};
+
+struct wav_header_t
+{
+	char chunkID[4]; //"RIFF" = 0x46464952
+	unsigned long chunkSize;
+	char format[4]; //"WAVE" = 0x45564157
+	char subchunk1ID[4]; //"fmt " = 0x20746D66
+	unsigned long subchunk1Size;
+	unsigned short audioFormat;
+	unsigned short numChannels;
+	unsigned long sampleRate;
+	unsigned long byteRate;
+	unsigned short blockAlign;
+	unsigned short bitsPerSample;
+};
+
+struct chunk_t
+{
+	char ID[4]; //"data" = 0x61746164
+	unsigned long size;
+};
+
+void EvictOldestAsset(Assets* pAssets);
+void RequestAsset(Assets* pAssets, AssetSlot* pAsset, ASSET_TYPES pType);

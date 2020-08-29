@@ -1,0 +1,8 @@
+{08/24/20 10:54:05} Loading asset C:\Users\admin\Documents\Visual Studio 2017\Projects\Bang\Resources\Main Menu\1.png
+{08/24/20 10:54:05} Loading asset C:\Users\admin\Documents\Visual Studio 2017\Projects\Bang\Resources\Main Menu\2.png
+{08/24/20 10:54:05} Loading asset C:\Users\admin\Documents\Visual Studio 2017\Projects\Bang\Resources\Main Menu\3.png
+{08/24/20 10:54:05} Loading asset C:\Users\admin\Documents\Visual Studio 2017\Projects\Bang\Resources\Main Menu\4.png
+{08/24/20 10:54:05} Loading asset C:\Users\admin\Documents\Visual Studio 2017\Projects\Bang\Resources\Main Menu\5.png
+{08/24/20 10:54:05} Loading asset C:\Windows\Fonts\arialbd.ttf
+{08/24/20 10:54:09} Loading asset C:\Users\ajensen\source\repos\Bang\Resources\beep.wav
+{08/24/20 10:54:09} Unable to open sound asset C:\Users\ajensen\source\repos\Bang\Resources\beep.wav

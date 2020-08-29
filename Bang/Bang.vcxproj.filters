@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="Bang.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="Assets.h">
+      <Filter>Assets</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform.h" />
+    <ClInclude Include="shaders.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Render.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="typedefs.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="FreeList.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Netcode.h">
+      <Filter>Netcode</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigFile.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Collision.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Level.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Assets.cpp">
+      <Filter>Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="Font.cpp">
+      <Filter>Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="Sound.cpp">
+      <Filter>Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="Bitmap.cpp">
+      <Filter>Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32Bang.cpp" />
+    <ClCompile Include="Render.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityList.cpp">
+      <Filter>Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>Netcode</Filter>
+    </ClCompile>
+    <ClCompile Include="NetCodeCommon.cpp">
+      <Filter>Netcode</Filter>
+    </ClCompile>
+    <ClCompile Include="NetMessages.cpp">
+      <Filter>Netcode</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigFile.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Manifold.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsBody.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Shape.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32Server.cpp" />
+    <ClCompile Include="GameScreen.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Level.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32Common.cpp" />
+    <ClCompile Include="MainMenu.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Lobby.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Modal.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Interface.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="LevelCollisionMask.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorModal.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Button.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Textbox.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="GameStartModal.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{9e4c0921-1a00-45fa-9e8e-f64d4023e9b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{2a4450f1-0b45-4bce-9e89-880ab77eb07e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{6a4ab76c-6d50-4411-899f-524eb46c94e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entities">
+      <UniqueIdentifier>{89b4902b-3871-4154-a0d6-ab4c7eced4e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Netcode">
+      <UniqueIdentifier>{43ddfd9d-677b-4bda-8aa4-b4333ffac5f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics">
+      <UniqueIdentifier>{9a233407-4ac9-4b81-9920-7a4bbea26d83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{1b5acd13-62b6-4fdd-8c74-18c28d799e2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{4c9baa77-877d-459e-9ee3-f6ff4f94d60e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
