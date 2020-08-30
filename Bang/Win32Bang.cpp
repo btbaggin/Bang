@@ -6,13 +6,13 @@ TODO:
 
 CLEANUP:
 	Remove flip from player?
-	Better walking sounds
-	Config file for things (health, speed, interface, attack time)
 	Player hurt animation thingy
 	Outline player when you can attack?
 	Use relative paths everywhere
+	Cleanup game start logic
 
 BUGS:
+	Player render with transparent overlap
 */
 
 #pragma comment(lib, "XInput.lib") 
@@ -83,6 +83,7 @@ GameInput g_input = {};
 #include "Assets.cpp"
 #include "Input.cpp"
 #include "Camera.cpp"
+#include "ParticleSystem.cpp"
 #include "Render.cpp"
 #include "EntityList.cpp"
 #include "NetcodeCommon.cpp"
@@ -327,7 +328,15 @@ static void RenderGameElements(GameState* pState, RenderState* pRender)
 		RenderGame(pState, pRender);
 	}
 
-	SetZLayer(pRender, Z_LAYER_Player);
+	for (u32 i = 0; i < pState->players.count; i++)
+	{
+		Player* e = pState->players.items + i;
+		if (IsEntityValid(&pState->entities, e->entity))
+		{
+			RenderPlayerHeader(pRender, e);
+		}
+	}
+
 	for (u32 i = 0; i < pState->players.count; i++)
 	{
 		Player* e = pState->players.items + i;

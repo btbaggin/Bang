@@ -145,6 +145,9 @@
     <ClCompile Include="GameStartModal.cpp">
       <Filter>Interface</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Assets">

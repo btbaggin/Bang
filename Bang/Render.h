@@ -13,19 +13,21 @@ enum Z_LAYERS
 	Z_LAYER_MAX,
 };
 
-
 enum RENDER_GROUP_ENTRY_TYPE : u8
 {
 	RENDER_GROUP_ENTRY_TYPE_Line,
 	RENDER_GROUP_ENTRY_TYPE_Text,
 	RENDER_GROUP_ENTRY_TYPE_Quad,
 	RENDER_GROUP_ENTRY_TYPE_Matrix,
+	RENDER_GROUP_ENTRY_TYPE_ParticleSystem,
 };
 
 enum RENDER_TEXT_FLAGS : u8
 {
 	RENDER_TEXT_FLAG_Clip = 1
 };
+
+
 
 struct Renderable_Text
 {
@@ -54,6 +56,16 @@ struct Renderable_Line
 struct Renderable_Matrix
 {
 	mat4 matrix;
+};
+
+struct Renderable_ParticleSystem
+{
+	u32 particle_count;
+	u32 texture;
+	u32 VAO;
+	u32 VBO;
+	u32 CBO;
+	u32 PBO;
 };
 
 struct RenderEntry
@@ -93,6 +105,7 @@ struct RenderState
 	float z_index;
 
 	GLProgram program;
+	GLProgram particle_program;
 
 	MemoryStack* vertices;
 	u32 vertex_count;

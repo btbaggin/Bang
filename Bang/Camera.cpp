@@ -38,5 +38,5 @@ static inline v2 WorldSpaceToCameraSpace(Camera* pCamera, v2 pPosition)
 
 static inline mat4 GetOrthoMatrix(Camera* pCamera)
 {
-	return HMM_Orthographic(pCamera->position.X, pCamera->position.X + g_state.form->width, pCamera->position.Y + g_state.form->height, pCamera->position.Y, -Z_LAYER_MAX * Z_INDEX_DEPTH, 10.0F);
+	return HMM_Orthographic(pCamera->position.X, pCamera->position.X + g_state.form->width, pCamera->position.Y + g_state.form->height, pCamera->position.Y, -Z_LAYER_MAX * Z_INDEX_DEPTH, Z_LAYER_MAX * Z_INDEX_DEPTH);
 }

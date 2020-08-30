@@ -48,24 +48,6 @@ static void UpdateParalaxBitmap(ParalaxBitmap* pBitmap, float pDeltaTime, float 
 	}
 }
 
-static inline void SetZLayer(RenderState* pState, float pLayer);
-static void PushSizedQuad(RenderState* pState, v2 pMin, v2 pSize, Bitmap* pTexture);
-static void PushSizedQuad(RenderState* pState, v2 pMin, v2 pSize, v4 pColor, Bitmap* pTexture);
-static void RenderParalaxBitmap(RenderState* pState, Assets* pAssets, ParalaxBitmap* pBitmap, v2 pSize)
-{
-	for (u32 i = 0; i < pBitmap->layers; i++)
-	{
-		SetZLayer(pState, (float)i);
-		v2 pos = pBitmap->position[i];
-		Bitmap* bitmap = GetBitmap(pAssets, pBitmap->bitmaps[i]);
-		if (pos.X > 0)
-		{
-			//Render an extra bitmap to fill the hole until the original one wraps around
-			PushSizedQuad(pState, pos - V2(pSize.X, 0), pSize, bitmap);
-		}
-		PushSizedQuad(pState, pos, pSize, bitmap);
-	}
-}
 
 static AnimatedBitmap CreateAnimatedBitmap(BITMAPS pBitmap, u32 pAnimationCount, u32* pAnimationLengths, v2 pFrameSize)
 {
@@ -90,28 +72,6 @@ static void UpdateAnimation(AnimatedBitmap* pBitmap, float pDeltaTime)
 		{
 			pBitmap->current_index = 0;
 		}
-	}
-}
-
-static void RenderAnimation(RenderState* pState, v2 pPosition, v2 pSize, v4 pColor, AnimatedBitmap* pBitmap, bool pFlip = false)
-{
-	Bitmap* bitmap = GetBitmap(g_transstate.assets, pBitmap->bitmap);
-	if (bitmap)
-	{
-		v2 frame = pBitmap->frame_size;
-		frame.X *= pBitmap->current_index;
-		frame.Y *= pBitmap->current_animation;
-
-		bitmap->uv_min = V2(frame.X / bitmap->width, frame.Y / bitmap->height);
-		bitmap->uv_max = bitmap->uv_min + (pBitmap->frame_size / V2((float)bitmap->width, (float)bitmap->height));
-		if (pFlip)
-		{
-			float u = bitmap->uv_min.U;
-			bitmap->uv_min.U = bitmap->uv_max.U;
-			bitmap->uv_max.U = u;
-		}
-
-		PushSizedQuad(pState, pPosition, pSize, pColor, bitmap);
 	}
 }
 

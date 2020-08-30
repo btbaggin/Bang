@@ -82,8 +82,12 @@ static void InitializeRenderer(RenderState* pState)
 	pState->program = CreateProgram(v_shader, f_shader);
 	glUseProgram(pState->program.id);
 
+	v_shader = LoadShader(PARTICLE_VERTEX_SHADER, GL_VERTEX_SHADER);
+	f_shader = LoadShader(PARTICLE_FRAGMENT_SHADER, GL_FRAGMENT_SHADER);
+	pState->particle_program = CreateProgram(v_shader, f_shader);
+
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glCullFace(GL_BACK);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
@@ -165,6 +169,54 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 
 		glLineWidth(line->size);
 		glDrawArrays(GL_LINES, line->first_vertex, 2);
+	}
+	break;
+
+	case RENDER_GROUP_ENTRY_TYPE_ParticleSystem:
+	{
+		Renderable_ParticleSystem* sys = (Renderable_ParticleSystem*)address;
+		glUseProgram(pState->particle_program.id);
+
+		glBindVertexArray(sys->VAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, sys->texture);
+		glUniform1i(pState->particle_program.texture, 0);
+
+		mat4 m = GetOrthoMatrix(&g_state.camera);
+		glUniformMatrix4fv(pState->particle_program.mvp, 1, GL_FALSE, &m.Elements[0][0]);
+
+		//vertices
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, sys->VBO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		//positions
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, sys->PBO);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		//colors
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, sys->CBO);
+		glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*)0);
+
+		glVertexAttribDivisor(0, 0); // particles vertices : always reuse
+		glVertexAttribDivisor(1, 1); // positions : one per quad
+		glVertexAttribDivisor(2, 1); // color : one per quad
+
+		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, sys->particle_count);
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
+		glBindVertexArray(0);
+
+		glUseProgram(pState->program.id);
+		glBindVertexArray(pState->VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, pState->VBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pState->EBO);
+		glBufferData(GL_ARRAY_BUFFER, pState->vertex_count * sizeof(Vertex), MemoryAddress(pState->vertices), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, pState->index_count * sizeof(u16), MemoryAddress(pState->indices), GL_STATIC_DRAW);
 	}
 	break;
 	}
@@ -405,6 +457,20 @@ static void PushMatrix(RenderState* pState, mat4 pMatrix)
 	m->matrix = pMatrix;
 }
 
+static void PushParticleSystem(RenderState* pState, ParticleSystem* pSystem)
+{
+	Renderable_ParticleSystem* m = PushRenderGroupEntry(pState, Renderable_ParticleSystem, RENDER_GROUP_ENTRY_TYPE_ParticleSystem);
+	m->CBO = pSystem->CBO;
+	m->PBO = pSystem->PBO;
+	m->VAO = pSystem->VAO;
+	m->VBO = pSystem->VBO;
+	m->particle_count = pSystem->particle_count;
+
+	Bitmap* bitmap = GetBitmap(g_transstate.assets, pSystem->texture);
+	if (bitmap) m->texture = bitmap->texture;
+	else m->texture = g_transstate.assets->blank_texture;
+}
+
 static inline void SetZLayer(RenderState* pState, Z_LAYERS pLayer)
 {
 	pState->z_index = pLayer * Z_INDEX_DEPTH;
@@ -412,6 +478,44 @@ static inline void SetZLayer(RenderState* pState, Z_LAYERS pLayer)
 static inline void SetZLayer(RenderState* pState, float pLayer)
 {
 	pState->z_index = pLayer;
+}
+
+static void RenderParalaxBitmap(RenderState* pState, Assets* pAssets, ParalaxBitmap* pBitmap, v2 pSize)
+{
+	for (u32 i = 0; i < pBitmap->layers; i++)
+	{
+		SetZLayer(pState, (float)i);
+		v2 pos = pBitmap->position[i];
+		Bitmap* bitmap = GetBitmap(pAssets, pBitmap->bitmaps[i]);
+		if (pos.X > 0)
+		{
+			//Render an extra bitmap to fill the hole until the original one wraps around
+			PushSizedQuad(pState, pos - V2(pSize.X, 0), pSize, bitmap);
+		}
+		PushSizedQuad(pState, pos, pSize, bitmap);
+	}
+}
+
+static void RenderAnimation(RenderState* pState, v2 pPosition, v2 pSize, v4 pColor, AnimatedBitmap* pBitmap, bool pFlip = false)
+{
+	Bitmap* bitmap = GetBitmap(g_transstate.assets, pBitmap->bitmap);
+	if (bitmap)
+	{
+		v2 frame = pBitmap->frame_size;
+		frame.X *= pBitmap->current_index;
+		frame.Y *= pBitmap->current_animation;
+
+		bitmap->uv_min = V2(frame.X / bitmap->width, frame.Y / bitmap->height);
+		bitmap->uv_max = bitmap->uv_min + (pBitmap->frame_size / V2((float)bitmap->width, (float)bitmap->height));
+		if (pFlip)
+		{
+			float u = bitmap->uv_min.U;
+			bitmap->uv_min.U = bitmap->uv_max.U;
+			bitmap->uv_max.U = u;
+		}
+
+		PushSizedQuad(pState, pPosition, pSize, pColor, bitmap);
+	}
 }
 
 static void DisposeRenderState(RenderState* pState)
