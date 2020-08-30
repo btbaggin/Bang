@@ -13,7 +13,11 @@ static void UpdateGame(GameState* pState, float pDeltaTime, u32 pPredictionId)
 	if (IsKeyDown(KEY_Down)) flags |= 1 << INPUT_MoveDown;
 	if (IsKeyDown(KEY_Space)) flags |= 1 << INPUT_Shoot;
 
+	Client* c = g_net.clients + g_net.client_id;
+	Player* p = g_state.players.items + g_net.client_id;
+
 	ClientInput i = {};
+	i.attack_choice = p->state.team_attack_choice;
 	i.client_id = g_net.client_id;
 	i.prediction_id = pPredictionId;
 	i.dt = pDeltaTime;
@@ -21,8 +25,6 @@ static void UpdateGame(GameState* pState, float pDeltaTime, u32 pPredictionId)
 	u32 size = WriteMessage(g_net.buffer, &i, ClientInput, CLIENT_MESSAGE_Input);
 	SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
 
-	Client* c = g_net.clients + g_net.client_id;
-	Player* p = g_state.players.items + g_net.client_id;
 	UpdatePlayer(p, pDeltaTime, flags);
 
 	u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
@@ -60,4 +62,21 @@ static void RenderGameInterface(GameState* pState, Interface* pInterface, Render
 	char buffer[10];
 	sprintf(buffer, "Ping: %dms", (u32)ms);
 	PushText(pRender, FONT_Debug, buffer, V2(0), COLOR_BLACK);
+
+	GameScreen* screen = (GameScreen*)pInterface->current_screen_data;
+	Player* p = pState->players.items + g_net.client_id;
+
+	if (p->state.team_attack_choice == ATTACK_ROLLING)
+	{
+		PushSizedQuad(pRender, V2(100, pState->form->height - 100), V2(100), team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)]);
+		PushSizedQuad(pRender, V2(pState->form->width - 100, pState->form->height - 100), V2(100), team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)]);
+	}
+	else if (p->state.team_attack_choice == ATTACK_PENDING)
+	{
+		PushSizedQuad(pRender, V2(100, pState->form->height - 100), V2(100), team_colors[screen->attack_choices[0]]);
+		PushSizedQuad(pRender, V2(pState->form->width - 100, pState->form->height - 100), V2(100), team_colors[screen->attack_choices[1]]);
+
+		if (IsKeyPressed(KEY_Q)) p->state.team_attack_choice = screen->attack_choices[0];
+		else if (IsKeyPressed(KEY_E)) p->state.team_attack_choice = screen->attack_choices[1];
+	}
 }

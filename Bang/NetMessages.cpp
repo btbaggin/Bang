@@ -19,7 +19,7 @@ struct GameStartAnnoucement : public ServerMessage
 {
 	u32 time;
 	PLAYER_ROLES roles[MAX_PLAYERS];
-	v4 colors[MAX_PLAYERS];
+	PLAYER_TEAMS teams[MAX_PLAYERS];
 };
 struct JoinAnnoucement : public ServerMessage
 {
@@ -44,6 +44,7 @@ struct Ping : public ClientMessage { };
 struct ClientInput : public ClientMessage
 {
 	u32 prediction_id;
+	s8 attack_choice;
 	float dt;
 	u32 flags;
 };

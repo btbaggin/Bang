@@ -16,17 +16,23 @@ static void SetAnimation(AnimatedBitmap* pBitmap, u32 pAnimation, float pDuratio
 	pBitmap->frame_duration = pDuration;
 }
 
-#ifdef _SERVER
-static void UpdateAnimation(AnimatedBitmap* pBitmap, float pDeltaTime) { }
-#endif // _SERVER
+static void AttackPlayer(Player* pPlayer)
+{
+	pPlayer->state.health--;
+	float time = GetSetting(&g_state.config, "player_invuln_time")->f;
+	ResetTimer(&pPlayer->invuln_timer, time);
+}
 
-static Player* FindPlayersWithinAttackRange(Player* pPlayer)
+static Player* FindPlayersWithinAttackRange(Player* pPlayer, PLAYER_TEAMS pTeam)
 {
 	u32 range = GetSetting(&g_state.config, "player_attack_range")->i;
 	for (u32 i = 0; i < MAX_PLAYERS; i++)
 	{
 		Player* p = g_state.players.items + i;
-		if (p != pPlayer && IsEntityValid(&g_state.entities, p->entity))
+		if (p != pPlayer && 
+			IsEntityValid(&g_state.entities, p->entity) &&
+			p->team == pTeam &&
+			!TimerIsStarted(&p->invuln_timer))
 		{
 			if (HMM_LengthSquared(p->entity->position - pPlayer->entity->position) < range * range)
 			{
@@ -39,6 +45,50 @@ static Player* FindPlayersWithinAttackRange(Player* pPlayer)
 }
 
 const float ATTACK_TIME = 1.0f;
+const u32 PLAYER_SIZE = 64;
+static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
+{
+	Entity* e = AddEntity(&pState->entities);
+	e->position = V2((float)Random(0, pState->map->width), (float)Random(0, pState->map->height));
+
+	Player p = {};
+	p.entity = e;
+	strcpy(p.name, pName);
+	p.state.team_attack_choice = ATTACK_ON_CD;
+	//ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
+	//options->color = V3(1);
+	//options->direction = V2(0);
+	//options->life_min = 0.5F; options->life_max = 1.0F;
+	//options->size_min = 10; options->size_max = 32;
+	//options->speed_min = 1; options->speed_max = 5;
+	//options->spread = 0;
+	//p.dust = SpawnParticleSystem(3, 5, BITMAP_MainMenu1, options);
+
+	u32 health = GetSetting(&g_state.config, "player_health")->i;
+	p.local_state = {};
+	p.state.health = health;
+	p.state.animation = PLAYER_ANIMATION_Idle;
+
+	RigidBodyCreationOptions o;
+	o.density = 1.0F;
+	o.type = SHAPE_Poly;
+	o.width = 40;
+	o.offset = V2(12, 0);
+	o.height = PLAYER_SIZE;
+	o.entity = e;
+	o.material.dynamic_friction = 0.2F;
+	o.material.static_friction = 0.1F;
+
+	e->body = AddRigidBody(pState->world_arena, &pState->physics, &o);
+
+	u32* lengths = PushArray(pState->world_arena, u32, 3);
+	lengths[0] = 6; lengths[1] = 4; lengths[2] = 6;
+	p.bitmap = CreateAnimatedBitmap(BITMAP_Character, 3, lengths, V2(48));
+
+	pState->players.AddItem(p);
+	return pState->players.items + pState->players.count - 1;
+}
+
 static void UpdatePlayer(Player* pEntity, float pDeltaTime, u32 pFlags)
 {
 	float speed = GetSetting(&g_state.config, "player_speed")->f;
@@ -65,16 +115,25 @@ static void UpdatePlayer(Player* pEntity, float pDeltaTime, u32 pFlags)
 	}
 	if (HasFlag(1 << INPUT_Shoot, pFlags) && pEntity->bitmap.current_animation != PLAYER_ANIMATION_Attack)
 	{
-		Player* attackee = FindPlayersWithinAttackRange(pEntity);
-		if (attackee)
+		if (pEntity->state.team_attack_choice == ATTACK_ON_CD)
 		{
-			attackee->state.health--;
-			attacking = true;
-			ResetTimer(&pEntity->attack_timer, 1.0F);
+			pEntity->state.team_attack_choice = ATTACK_ROLLING;
+			ResetTimer(&pEntity->attack_choose_timer, 3.0F);
+		}
+		else if(pEntity->state.team_attack_choice >= 0)
+		{
+			Player* attackee = FindPlayersWithinAttackRange(pEntity, (PLAYER_TEAMS)pEntity->state.team_attack_choice);
+			if (attackee)
+			{
+				AttackPlayer(attackee);
+				attacking = true;
+				pEntity->state.team_attack_choice = ATTACK_ON_CD;
+			}
 		}
 	}
 
-	if (pEntity->bitmap.current_animation != PLAYER_ANIMATION_Attack || TickTimer(&pEntity->attack_timer, pDeltaTime))
+	//Update animation
+	if (pEntity->bitmap.current_animation != PLAYER_ANIMATION_Attack || AnimationIsComplete(&pEntity->bitmap))
 	{
 		if(attacking) SetAnimation(&pEntity->bitmap, PLAYER_ANIMATION_Attack, ATTACK_TIME / 4.0F);
 		else if (IsZero(velocity)) SetAnimation(&pEntity->bitmap, PLAYER_ANIMATION_Idle, 0.25F);
@@ -84,10 +143,30 @@ static void UpdatePlayer(Player* pEntity, float pDeltaTime, u32 pFlags)
 	UpdateAnimation(&pEntity->bitmap, pDeltaTime);
 	pEntity->state.animation = pEntity->bitmap.current_animation;
 
+	//Invulnerability after being attacked
+	if (TickTimer(&pEntity->invuln_timer, pDeltaTime)) StopTimer(&pEntity->invuln_timer);
+
+	if (pEntity->state.team_attack_choice == ATTACK_ROLLING && TickTimer(&pEntity->attack_choose_timer, pDeltaTime))
+	{
+		StopTimer(&pEntity->attack_choose_timer);
+		pEntity->state.team_attack_choice = ATTACK_PENDING;
+
+#ifndef _SERVER
+		GameScreen* game = (GameScreen*)g_interface.current_screen_data;
+		u32 num[PLAYER_TEAM_COUNT];
+		GenerateRandomNumbersWithNoDuplicates(num, PLAYER_TEAM_COUNT);
+		game->attack_choices[0] = (PLAYER_TEAMS)num[0];
+		game->attack_choices[1] = (PLAYER_TEAMS)num[1];
+#endif
+	}
+
+	//pEntity->dust.position = pEntity->entity->position;
+	//UpdateParticleSystem(&pEntity->dust, pDeltaTime, nullptr);
+
 #ifndef _SERVER
 	if (!IsZero(velocity))
 	{
-		if (!pEntity->walking) pEntity->walking = LoopSound(g_transstate.assets, SOUND_Walking, 0.1F);
+		if (!pEntity->walking) pEntity->walking = LoopSound(g_transstate.assets, SOUND_Walking, 0.25F);
 		else ResumeLoopSound(pEntity->walking);
 	}
 	else
@@ -101,54 +180,14 @@ static void UpdatePlayer(Player* pEntity, float pDeltaTime, u32 pFlags)
 	pEntity->entity->position.Y = clamp(0.0F, pEntity->entity->position.Y, (float)g_state.map->height);
 }
 
-const u32 PLAYER_SIZE = 64;
-static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
-{
-	Entity* e = AddEntity(&pState->entities);
-	e->position = V2((float)Random(0, pState->map->width), (float)Random(0, pState->map->height));
-
-	Player p = {};
-	p.entity = e;
-	strcpy(p.name, pName);
-	
-	u32 health = GetSetting(&g_state.config, "player_health")->i;
-	p.local_state = {};
-	p.state.health = health;
-
-	RigidBodyCreationOptions o;
-	o.density = 1.0F;
-	o.type = SHAPE_Poly;
-	o.width = 40;
-	o.offset = V2(12, 0);
-	o.height = PLAYER_SIZE;
-
-	o.entity = e;
-
-	PhysicsMaterial m = {};
-	m.dynamic_friction = 0.2F;
-	m.static_friction = 0.1F;
-	o.material = m;
-	e->body = AddRigidBody(pState->world_arena, &pState->physics, &o);
-
 #ifndef _SERVER
-	u32* lengths = PushArray(pState->world_arena, u32, 3);
-	lengths[0] = 6; lengths[1] = 4; lengths[2] = 6;
-	p.bitmap = CreateAnimatedBitmap(BITMAP_Character, 3, lengths, V2(48));
-#endif
-
-	pState->players.AddItem(p);
-	return pState->players.items + pState->players.count - 1;
-}
-
-#ifndef _SERVER
-static void RenderPlayer(RenderState* pState, Player* pEntity)
+static void RenderPlayerHeader(RenderState* pState, Player* pEntity)
 {
 	const float MARGIN = 5.0F;
 	const float ICON_SIZE = 24.0F;
 	const float HEADER_HEIGHT = 24.0F;
 	const float HEADER_WIDTH = 96.0F;
 	const float HEALTH_WIDTH = HEADER_WIDTH - ICON_SIZE;
-	const v2 size = V2(PLAYER_SIZE);
 	v2 pos = pEntity->entity->position - V2((HEADER_WIDTH - PLAYER_SIZE) / 2.0F, HEADER_HEIGHT / 2.0F);
 
 	//Header background
@@ -194,8 +233,22 @@ static void RenderPlayer(RenderState* pState, Player* pEntity)
 	SetZLayer(pState, Z_LAYER_Background4);
 	PushSizedQuad(pState, pos + V2(ICON_SIZE, GetFontSize(FONT_Normal)), V2(HEALTH_WIDTH * (pEntity->state.health / (float)max_health), 12), V4(0, 1, 0, 1));
 
+}
+
+static void RenderPlayer(RenderState* pState, Player* pEntity)
+{
+	const v2 size = V2(PLAYER_SIZE);
+	v4 color = team_colors[pEntity->team];
 	//Player
 	SetZLayer(pState, Z_LAYER_Player);
-	RenderAnimation(pState, pEntity->entity->position, size, pEntity->color, &pEntity->bitmap, pEntity->flip);
+	RenderAnimation(pState, pEntity->entity->position, size, color, &pEntity->bitmap, pEntity->flip);
+
+	if (pEntity->state.team_attack_choice >= 0)
+	{
+		PushSizedQuad(pState, pEntity->entity->position - V2(0, 100), V2(20), team_colors[pEntity->state.team_attack_choice]);
+	}
+
+	//SetZLayer(pState, Z_LAYER_Ui);
+	//PushParticleSystem(pState, &pEntity->dust);
 }
 #endif

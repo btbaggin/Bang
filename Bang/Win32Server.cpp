@@ -44,7 +44,9 @@ GameState g_state = {};
 GameTransState g_transstate = {};
 
 #include "Win32Common.cpp"
+#include "Memory.cpp"
 #include "Logger.cpp"
+#include "Assets.cpp"
 #include "Memory.cpp"
 #include "ConfigFile.cpp"
 #include "EntityList.cpp"
@@ -231,7 +233,6 @@ int main()
 				g_state.map = PushStruct(g_state.world_arena, TiledMap);
 				LoadTiledMap(g_state.map, "C:\\Users\\admin\\Desktop\\test.json", g_transstate.trans_arena);
 
-				v4 colors[] = { V4(1, 1, 0, 1), V4(0.5F, 0.75F, 1, 1), V4(0.45F, 0.5F, 0.2F, 1) };
 
 				u32 numbers[MAX_PLAYERS];
 				GenerateRandomNumbersWithNoDuplicates(numbers, MAX_PLAYERS);
@@ -248,13 +249,14 @@ int main()
 
 						players++;
 						if (numbers[i] == 0) s.roles[i] = PLAYER_ROLE_Sheriff;
-						s.colors[i] = colors[i % 3]; //TODO array count?
+						s.teams[i] = (PLAYER_TEAMS)(i % PLAYER_TEAM_COUNT);
 					}
 				}
 
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
 					Client* c = g_net.clients + i;
+					Player* p = g_state.players.items + i;
 					if (IsClientConnected(c))
 					{
 						if (s.roles[i] == PLAYER_ROLE_Unknown)
@@ -263,6 +265,8 @@ int main()
 							else if (numbers[i] < players / 2) s.roles[i] = PLAYER_ROLE_Renegade;
 							else s.roles[i] = PLAYER_ROLE_Outlaw;
 						}
+						p->role = s.roles[i];
+						p->team = s.teams[i];
 
 						u32 size = WriteMessage(g_net.buffer, &s, GameStartAnnoucement, SERVER_MESSAGE_GameStartAnnoucement);
 						SocketSend(&g_net.listen_socket, c->endpoint, g_net.buffer, size);
@@ -281,6 +285,7 @@ int main()
 				client->input_flags = i.flags;
 
 				Player* p = g_state.players.items + client_id;
+				if(i.attack_choice >= 0) p->state.team_attack_choice = i.attack_choice;
 				UpdatePlayer(p, i.dt, i.flags);
 			}
 			break;

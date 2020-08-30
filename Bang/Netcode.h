@@ -51,6 +51,7 @@ struct SyncedPlayerState
 {
 	u8 animation;
 	u8 health;
+	s8 team_attack_choice;
 };
 struct LocalPlayerState
 {

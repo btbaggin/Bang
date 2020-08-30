@@ -65,7 +65,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 					if (IsClientConnected(c))
 					{
 						Player* p = CreatePlayer(&g_state, pState, c->name);
-						p->color = s.colors[i];
+						p->team = s.teams[i];
 						p->role = s.roles[i];
 					}
 				}

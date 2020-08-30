@@ -99,6 +99,11 @@ static inline float Random()
 	return (float)rand() / (float)(RAND_MAX + 1);
 }
 
+static inline float Random(float pMin, float pMax)
+{
+	return Random() * (pMax - pMin) + pMin;
+}
+
 #define Megabytes(size) size * 1024 * 1024
 
 struct Rect 

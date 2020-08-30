@@ -53,6 +53,7 @@ struct LobbyScreen
 
 struct GameScreen
 {
+	PLAYER_TEAMS attack_choices[2];
 };
 
 typedef bool add_work_queue_entry(PlatformWorkQueue* pQueue, work_queue_callback pCallback, void* pData);

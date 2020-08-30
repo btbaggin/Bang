@@ -59,7 +59,6 @@ void EndTemporaryMemory(TemporaryMemoryHandle pHandle)
 	pHandle.stack->count = pHandle.count;
 }
 
-#ifndef _SERVER
 MemoryBlock* InsertBlock(MemoryBlock* pPrev, u64 pSize, void* pMemory)
 {
 	assert(pSize > sizeof(MemoryBlock));
@@ -175,4 +174,3 @@ void* Alloc(Assets* pAssets, u64 pSize)
 }
 
 #define AllocStruct(pPool, pType) (pType*)Alloc(pPool, sizeof(pType))
-#endif

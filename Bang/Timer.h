@@ -18,6 +18,8 @@ struct Timer
 
 static inline bool TickTimer(Timer* t, float pDeltaTime)
 {
+	if (t->threshold == 0) return false;
+
 	t->current_tick += pDeltaTime;
 	if (t->current_tick >= t->threshold)
 	{
@@ -26,6 +28,16 @@ static inline bool TickTimer(Timer* t, float pDeltaTime)
 	}
 
 	return false;
+}
+
+static inline bool TimerIsStarted(Timer* t)
+{
+	return t->threshold > 0;
+}
+
+static inline void StopTimer(Timer* t)
+{
+	t->threshold = 0;
 }
 
 static inline void ResetTimer(Timer* t, float pDuration)
