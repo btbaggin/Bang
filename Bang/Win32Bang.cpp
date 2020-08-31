@@ -1,15 +1,14 @@
 /*
 TODO:
+	Arrows
+	Beers
 	Particle systems for arrows and dust
 	intro screen for role before game starts
-	Ensure all roles are actually assigned
 
 CLEANUP:
 	Remove flip from player?
 	Player hurt animation thingy
 	Outline player when you can attack?
-	Use relative paths everywhere
-	Cleanup game start logic
 
 BUGS:
 	Player render with transparent overlap
@@ -89,11 +88,8 @@ GameInput g_input = {};
 #include "NetcodeCommon.cpp"
 #include "Collision.cpp"
 #include "Level.cpp"
-#include "Player.cpp"
 #include "Interface.cpp"
-//#include "MainMenu.cpp"
-//#include "Lobby.cpp"
-//#include "GameScreen.cpp"
+#include "Player.cpp"
 #include "Client.cpp"
 #include "Win32Common.cpp"
 

@@ -57,11 +57,7 @@ enum BITMAPS : u8
 	BITMAP_MainMenu4,
 	BITMAP_MainMenu5,
 	BITMAP_Character,
-	BITMAP_Sheriff,
-	BITMAP_Deputy,
-	BITMAP_Outlaw,
-	BITMAP_Renegade,
-	BITMAP_Unknown,
+	BITMAP_Target,
 	BITMAP_TexturePack,
 
 	BITMAP_COUNT

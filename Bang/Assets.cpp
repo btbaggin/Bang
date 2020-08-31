@@ -158,26 +158,22 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	assets->memory = CreateMemoryPool(AssetMemory, pSize);
 	
 	AddFontAsset(assets, FONT_Debug, "C:\\Windows\\Fonts\\cour.ttf", 20);
-	AddFontAsset(assets, FONT_Normal, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\font.ttf", 14);
-	AddFontAsset(assets, FONT_Title, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\font.ttf", 32);
+	AddFontAsset(assets, FONT_Normal, "..\\..\\Resources\\font.ttf", 14);
+	AddFontAsset(assets, FONT_Title, "..\\..\\Resources\\font.ttf", 32);
 
 	AddSoundAsset(assets, SOUND_Beep, "..\\..\\Resources\\beep.wav");
 	AddSoundAsset(assets, SOUND_Walking, "..\\..\\Resources\\walking.wav");
 	//AddBitmapAsset(assets, BITMAP_Background, ".\\Assets\\background.jpg");
 	//AddBitmapAsset(assets, BITMAP_Placeholder, ".\\Assets\\placeholder.jpg");
 
-	AddBitmapAsset(assets, BITMAP_MainMenu1, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\Main Menu\\1.png");
-	AddBitmapAsset(assets, BITMAP_MainMenu2, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\Main Menu\\2.png");
-	AddBitmapAsset(assets, BITMAP_MainMenu3, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\Main Menu\\3.png");
-	AddBitmapAsset(assets, BITMAP_MainMenu4, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\Main Menu\\4.png");
-	AddBitmapAsset(assets, BITMAP_MainMenu5, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\Main Menu\\5.png");
-	AddBitmapAsset(assets, BITMAP_Title, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\title.png");
-	AddBitmapAsset(assets, BITMAP_Character, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\character.png");
-	AddBitmapAsset(assets, BITMAP_Sheriff, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\sheriff.png");
-	AddBitmapAsset(assets, BITMAP_Deputy, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\deputy.png");
-	AddBitmapAsset(assets, BITMAP_Outlaw, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\outlaw.png");
-	AddBitmapAsset(assets, BITMAP_Renegade, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\renegade.png");
-	AddBitmapAsset(assets, BITMAP_Unknown, "C:\\Users\\admin\\Documents\\Visual Studio 2017\\Projects\\Bang\\Resources\\unknown.png");
+	AddBitmapAsset(assets, BITMAP_MainMenu1, "..\\..\\Resources\\Main Menu\\1.png");
+	AddBitmapAsset(assets, BITMAP_MainMenu2, "..\\..\\Resources\\Main Menu\\2.png");
+	AddBitmapAsset(assets, BITMAP_MainMenu3, "..\\..\\Resources\\Main Menu\\3.png");
+	AddBitmapAsset(assets, BITMAP_MainMenu4, "..\\..\\Resources\\Main Menu\\4.png");
+	AddBitmapAsset(assets, BITMAP_MainMenu5, "..\\..\\Resources\\Main Menu\\5.png");
+	AddBitmapAsset(assets, BITMAP_Title, "..\\..\\Resources\\title.png");
+	AddBitmapAsset(assets, BITMAP_Character, "..\\..\\Resources\\character.png");
+	AddBitmapAsset(assets, BITMAP_Target, "..\\..\\Resources\\renegade.png");
 	/*PackedTexture* text = new PackedTexture();
 	text->textures[0] = { BITMAP_Error, "error.png" };
 	text->textures[1] = { BITMAP_Question, "question.png" };

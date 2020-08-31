@@ -123,3 +123,5 @@ struct Player
 //{
 //	Entity* entity;
 //};
+
+static void UpdatePlayer(Player* pEntity, float pDeltaTime, u32 pFlags);

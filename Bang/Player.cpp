@@ -184,54 +184,51 @@ static void UpdatePlayer(Player* pEntity, float pDeltaTime, u32 pFlags)
 static void RenderPlayerHeader(RenderState* pState, Player* pEntity)
 {
 	const float MARGIN = 5.0F;
-	const float ICON_SIZE = 24.0F;
 	const float HEADER_HEIGHT = 24.0F;
 	const float HEADER_WIDTH = 96.0F;
-	const float HEALTH_WIDTH = HEADER_WIDTH - ICON_SIZE;
 	v2 pos = pEntity->entity->position - V2((HEADER_WIDTH - PLAYER_SIZE) / 2.0F, HEADER_HEIGHT / 2.0F);
 
-	//Header background
-	v4 header_color = GetSetting(&g_state.config, "header_background")->V4;
-	SetZLayer(pState, Z_LAYER_Background2);
-	PushSizedQuad(pState, pos, V2(HEADER_WIDTH + MARGIN * 2, HEADER_HEIGHT + MARGIN * 2), header_color);
-	pos += V2(MARGIN);
-
-	BITMAPS bitmap = BITMAP_None;
 	v4 color = V4(1);
 	switch (pEntity->role)
 	{
 	case PLAYER_ROLE_Sheriff:
-		bitmap = BITMAP_Sheriff;
 		color = V4(1, 1, 0, 1);
 		break;
 	case PLAYER_ROLE_Outlaw:
-		bitmap = BITMAP_Outlaw;
 		color = V4(0.3F, 0.3F, 0.3F, 1);
 		break;
 	case PLAYER_ROLE_Renegade:
-		bitmap = BITMAP_Renegade;
 		color = V4(1, 0, 0, 1);
 		break;
 	case PLAYER_ROLE_Deputy:
-		bitmap = BITMAP_Deputy;
 		color = V4(1, 1, 0, 1);
 		break;
 	case PLAYER_ROLE_Unknown:
-		bitmap = BITMAP_Unknown;
 		break;
 	}
-	//Role icon
-	SetZLayer(pState, Z_LAYER_Background3);
-	PushSizedQuad(pState, pos, V2(ICON_SIZE), color, GetBitmap(g_transstate.assets, bitmap));
+
+	//Header background
+	SetZLayer(pState, Z_LAYER_Background2);
+	PushSizedQuad(pState, pos, V2(HEADER_WIDTH + MARGIN * 2, HEADER_HEIGHT + MARGIN * 2), color);
+
+	if (pEntity->state.team_attack_choice >= 0)
+	{
+		PushSizedQuad(pState, pos - V2(24, 0), V2(24), team_colors[pEntity->state.team_attack_choice], GetBitmap(g_transstate.assets, BITMAP_Target));
+	}
+
+	pos += V2(MARGIN);
 
 	//Name
-	PushText(pState, FONT_Normal, pEntity->name, pos + V2(ICON_SIZE, 0), V4(1));
+	SetZLayer(pState, Z_LAYER_Background3);
+	PushText(pState, FONT_Normal, pEntity->name, pos, V4(1));
 
 	//Health bar
 	u32 max_health = GetSetting(&g_state.config, "player_health")->i;
-	PushSizedQuad(pState, pos + V2(ICON_SIZE, GetFontSize(FONT_Normal)), V2(HEALTH_WIDTH, 12), V4(1, 0, 0, 1));
+	PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH, 12), V4(1, 0, 0, 1));
 	SetZLayer(pState, Z_LAYER_Background4);
-	PushSizedQuad(pState, pos + V2(ICON_SIZE, GetFontSize(FONT_Normal)), V2(HEALTH_WIDTH * (pEntity->state.health / (float)max_health), 12), V4(0, 1, 0, 1));
+	PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH * (pEntity->state.health / (float)max_health), 12), V4(0, 1, 0, 1));
+
+
 
 }
 
@@ -242,11 +239,6 @@ static void RenderPlayer(RenderState* pState, Player* pEntity)
 	//Player
 	SetZLayer(pState, Z_LAYER_Player);
 	RenderAnimation(pState, pEntity->entity->position, size, color, &pEntity->bitmap, pEntity->flip);
-
-	if (pEntity->state.team_attack_choice >= 0)
-	{
-		PushSizedQuad(pState, pEntity->entity->position - V2(0, 100), V2(20), team_colors[pEntity->state.team_attack_choice]);
-	}
 
 	//SetZLayer(pState, Z_LAYER_Ui);
 	//PushParticleSystem(pState, &pEntity->dust);

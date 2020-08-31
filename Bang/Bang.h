@@ -40,22 +40,6 @@ enum INPUT_ACTIONS
 };
 
 
-
-struct MainMenuScreen
-{
-	s16 menu_index;
-	ParalaxBitmap backgound;
-};
-
-struct LobbyScreen
-{
-};
-
-struct GameScreen
-{
-	PLAYER_TEAMS attack_choices[2];
-};
-
 typedef bool add_work_queue_entry(PlatformWorkQueue* pQueue, work_queue_callback pCallback, void* pData);
 typedef void complete_all_work(PlatformWorkQueue* pQueue);
 

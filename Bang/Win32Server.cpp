@@ -231,28 +231,34 @@ int main()
 				srand(t);
 
 				g_state.map = PushStruct(g_state.world_arena, TiledMap);
-				LoadTiledMap(g_state.map, "C:\\Users\\admin\\Desktop\\test.json", g_transstate.trans_arena);
+				LoadTiledMap(g_state.map, "..\\..\\Resources\\level.json", g_transstate.trans_arena);
 
+				//Get number of connected players
+				u32 players = 0;
+				for (u32 i = 0; i < MAX_PLAYERS; i++)
+					if (IsClientConnected(g_net.clients + i)) players++;
 
+				//Generate numbers for roles
 				u32 numbers[MAX_PLAYERS];
-				GenerateRandomNumbersWithNoDuplicates(numbers, MAX_PLAYERS);
+				GenerateRandomNumbersWithNoDuplicates(numbers, players);
+
+				//We need to displaye who the sherif is and teams to everyone
 				GameStartAnnoucement s = {};
 				s.time = t;
-				u32 players = 0;
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
 					Client* c = g_net.clients + i;
 					s.roles[i] = PLAYER_ROLE_Unknown;
-					if (IsClientConnected(g_net.clients + i)) 
+					if (IsClientConnected(c)) 
 					{
 						Player* p = CreatePlayer(&g_state, &g_net, c->name);
 
-						players++;
 						if (numbers[i] == 0) s.roles[i] = PLAYER_ROLE_Sheriff;
 						s.teams[i] = (PLAYER_TEAMS)(i % PLAYER_TEAM_COUNT);
 					}
 				}
 
+				//Generate your local role so its secret to everyone else
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
 					Client* c = g_net.clients + i;
@@ -261,6 +267,9 @@ int main()
 					{
 						if (s.roles[i] == PLAYER_ROLE_Unknown)
 						{
+							// 1/4 players are deputies
+							// 1/4 players are renegades
+							// 1/2 players are outlaws
 							if (numbers[i] < players / 4) s.roles[i] = PLAYER_ROLE_Deputy;
 							else if (numbers[i] < players / 2) s.roles[i] = PLAYER_ROLE_Renegade;
 							else s.roles[i] = PLAYER_ROLE_Outlaw;

@@ -1,6 +1,22 @@
 #include "Textbox.cpp"
 #include "Button.cpp"
 
+struct MainMenuScreen
+{
+	s16 menu_index;
+	ParalaxBitmap backgound;
+};
+
+struct LobbyScreen
+{
+	Button start_button;
+};
+
+struct GameScreen
+{
+	PLAYER_TEAMS attack_choices[2];
+};
+
 static float GetModalSize(MODAL_SIZES pSize)
 {
 	float screen_width = g_state.form->width - (g_state.form->width / 5.0F);
@@ -37,10 +53,13 @@ static void UpdateElementGroup(ElementGroup* pGroup)
 		{
 			UiElement* element = pGroup->elements.items[focus_index];
 			element->focused = false;
-		}
-		
-		focus_index++;
-		if (focus_index >= (s32)pGroup->elements.count) focus_index = 0;
+		}	
+
+		if (IsKeyDown(KEY_Shift)) focus_index--;
+		else focus_index++;
+
+		if (focus_index > (s32)pGroup->elements.count - 1) focus_index = 0;
+		else if (focus_index < 0) focus_index = pGroup->elements.count - 1;
 
 		UiElement* focus= pGroup->elements.items[focus_index];
 		focus->focused = true;

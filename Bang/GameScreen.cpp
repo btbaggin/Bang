@@ -1,7 +1,7 @@
 static void LoadGame(GameState* pState, GameScreen* pScreen)
 {
 	pState->map = PushStruct(pState->world_arena, TiledMap);
-	LoadTiledMap(pState->map, "C:\\Users\\admin\\Desktop\\test.json", g_transstate.trans_arena);
+	LoadTiledMap(pState->map, "..\\..\\Resources\\level.json", g_transstate.trans_arena);
 }
 
 static void UpdateGame(GameState* pState, float pDeltaTime, u32 pPredictionId)
@@ -47,7 +47,13 @@ static void RenderGame(GameState* pState, RenderState* pRender)
 
 static void UpdateGameInterface(GameState* pState, Interface* pInterface, float pDeltaTime)
 {
-
+	GameScreen* screen = (GameScreen*)pInterface->current_screen_data;
+	Player* p = pState->players.items + g_net.client_id;
+	if (p->state.team_attack_choice == ATTACK_PENDING)
+	{
+		if (IsKeyPressed(KEY_Q)) p->state.team_attack_choice = screen->attack_choices[0];
+		else if (IsKeyPressed(KEY_E)) p->state.team_attack_choice = screen->attack_choices[1];
+	}
 }
 
 static void RenderGameInterface(GameState* pState, Interface* pInterface, RenderState* pRender)
@@ -66,17 +72,22 @@ static void RenderGameInterface(GameState* pState, Interface* pInterface, Render
 	GameScreen* screen = (GameScreen*)pInterface->current_screen_data;
 	Player* p = pState->players.items + g_net.client_id;
 
+	v2 button_size = V2(64);
+	v2 button_1 = V2(pState->form->width / 4.0F, pState->form->height - button_size.Height - 20);
+	v2 button_2 = V2(pState->form->width - button_1.X - button_size.Width, pState->form->height - button_size.Height - 20);
+	v2 button_mid = CenterText(FONT_Title, "Q", button_size);
 	if (p->state.team_attack_choice == ATTACK_ROLLING)
 	{
-		PushSizedQuad(pRender, V2(100, pState->form->height - 100), V2(100), team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)]);
-		PushSizedQuad(pRender, V2(pState->form->width - 100, pState->form->height - 100), V2(100), team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)]);
+		PushSizedQuad(pRender, button_1, button_size, team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)], GetBitmap(g_transstate.assets, BITMAP_Target));
+		PushSizedQuad(pRender, button_2, button_size, team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)], GetBitmap(g_transstate.assets, BITMAP_Target));
+		PushText(pRender, FONT_Title, "Q", button_1 + button_mid, V4(0, 0, 0, 1));
+		PushText(pRender, FONT_Title, "E", button_2 + button_mid, V4(0, 0, 0, 1));
 	}
 	else if (p->state.team_attack_choice == ATTACK_PENDING)
 	{
-		PushSizedQuad(pRender, V2(100, pState->form->height - 100), V2(100), team_colors[screen->attack_choices[0]]);
-		PushSizedQuad(pRender, V2(pState->form->width - 100, pState->form->height - 100), V2(100), team_colors[screen->attack_choices[1]]);
-
-		if (IsKeyPressed(KEY_Q)) p->state.team_attack_choice = screen->attack_choices[0];
-		else if (IsKeyPressed(KEY_E)) p->state.team_attack_choice = screen->attack_choices[1];
+		PushSizedQuad(pRender, button_1, button_size, team_colors[screen->attack_choices[0]], GetBitmap(g_transstate.assets, BITMAP_Target));
+		PushSizedQuad(pRender, button_2, button_size, team_colors[screen->attack_choices[1]], GetBitmap(g_transstate.assets, BITMAP_Target));
+		PushText(pRender, FONT_Title, "Q", button_1 + button_mid, V4(0, 0, 0, 1));
+		PushText(pRender, FONT_Title, "E", button_2 + button_mid, V4(0, 0, 0, 1));
 	}
 }
