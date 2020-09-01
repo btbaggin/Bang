@@ -163,4 +163,5 @@ inline static bool IsClientConnected(Client* pClient)
 #endif
 }
 
+#include "EventPipe.cpp"
 #include "NetMessages.cpp"

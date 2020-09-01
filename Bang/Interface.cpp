@@ -167,6 +167,7 @@ static void RenderInterface(GameState* pState, Interface* pInterface, RenderStat
 	PushMatrix(pRender, m);
 	glDisable(GL_DEPTH_TEST);
 
+	SetZLayer(pRender, Z_LAYER_Ui);
 	switch (pInterface->current_screen)
 	{
 	case SCREEN_MainMenu:

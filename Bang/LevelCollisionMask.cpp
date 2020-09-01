@@ -157,7 +157,8 @@ static void GetLevelCollisionMask(cute_tiled_map_t* pMap, cute_tiled_layer_t* pL
 			if (width > 0)
 			{
 				//TODO dont hardcode 32
-				Entity* e = AddEntity(&g_state.entities);
+				Wall* e = CreateEntity(&g_state.entities, Wall);
+				
 				e->position = V2(x * 32.0F, y * 32.0F);
 
 				RigidBodyCreationOptions o = {};

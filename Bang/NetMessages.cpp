@@ -74,8 +74,8 @@ static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
 	u8 player_mask = 0;
 	for (u32 i = 0; i < MAX_PLAYERS; i++)
 	{
-		Player* p = pState->players.items + i;
-		if (IsEntityValid(&pState->entities, p->entity))
+		Player* p = pState->players.items[i];
+		if (IsEntityValid(&pState->entities, p))
 		{
 			player_mask |= (1 << i);
 		}
@@ -88,8 +88,8 @@ static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
 		Client* client = pNet->clients + i;
 		if (IsClientConnected(client))
 		{
-			Player* p = pState->players.items + i;
-			Serialize(&buffer, &p->entity->position, v2);
+			Player* p = pState->players.items[i];
+			Serialize(&buffer, &p->position, v2);
 			Serialize(&buffer, &p->state, SyncedPlayerState);
 		}
 	}
@@ -101,12 +101,14 @@ static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
 		Client* client = pNet->clients + i;
 		if (IsClientConnected(client))
 		{
-			Player* p = pState->players.items + i;
+			Player* p = pState->players.items[i];
 			Serialize(&buffer, &p->local_state, LocalPlayerState);
 			Serialize(&buffer, &client->current_prediction_id, u32);
+			SerializeEvents(&buffer, &pState->events);
 			SocketSend(&pNet->listen_socket, client->endpoint, pNet->buffer, (u32)(buffer - pNet->buffer));
 		}
 	}
+
 }
 #else
 static GameStateMessage ReadCurrentGameState(GameNetState* pNet, GameState* pState)
@@ -130,6 +132,7 @@ static GameStateMessage ReadCurrentGameState(GameNetState* pNet, GameState* pSta
 	}
 	Deserialize(&buffer, &m.local_state, LocalPlayerState);
 	Deserialize(&buffer, &m.prediction_id, u32);
+	DeserializeEvents(&buffer, &pState->events);
 
 	return m;
 }

@@ -58,6 +58,8 @@ enum BITMAPS : u8
 	BITMAP_MainMenu5,
 	BITMAP_Character,
 	BITMAP_Target,
+	BITMAP_Shadow,
+	BITMAP_Beer,
 	BITMAP_TexturePack,
 
 	BITMAP_COUNT

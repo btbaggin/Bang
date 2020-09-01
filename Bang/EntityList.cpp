@@ -2,13 +2,15 @@ static EntityList GetEntityList(MemoryStack* pStack)
 {
 	EntityList list = {};
 	list.end_index = 0;
-	list.entities = PushArray(pStack, Entity, MAX_ENTITIES);
+	list.entities = PushArray(pStack, Entity*, MAX_ENTITIES);
 	list.versions = PushArray(pStack, u16, MAX_ENTITIES);
 
 	return list;
 }
 
-static Entity* AddEntity(EntityList* pList)
+//https://stackoverflow.com/questions/222557/what-uses-are-there-for-placement-new
+#define CreateEntity(list, type) (type*)AddEntity(list, new(PushStruct(g_state.world_arena, type)) type);
+static Entity* AddEntity(EntityList* pList, Entity* pEntity)
 {
 	u32 index = pList->free_indices.Request();
 	if (!index)
@@ -23,10 +25,10 @@ static Entity* AddEntity(EntityList* pList)
 	i.version = version;
 	i.index = index + 1;
 
-	Entity* e = pList->entities + index;
-	e->index = i;
+	pList->entities[index] = pEntity;
+	pEntity->index = i;
 
-	return e;
+	return pEntity;
 }
 
 static void RemoveEntity(EntityList* pList, Entity* pEntity)
@@ -42,7 +44,7 @@ static Entity* GetEntity(EntityList* pList, EntityIndex pIndex)
 {
 	if (pIndex.index == 0) return nullptr;
 
-	Entity* e = pList->entities + pIndex.index - 1;
+	Entity* e = pList->entities[pIndex.index - 1];
 	if (e->index.version == pList->versions[pIndex.index - 1])
 	{
 		return e;

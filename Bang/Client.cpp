@@ -81,7 +81,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 					Client* c = pState->clients + i;
 					if (IsClientConnected(c))
 					{
-						Player* p = g_state.players.items + i;
+						Player* p = g_state.players.items[i];
 						v2 received_position = m.positions[i];
 						SyncedPlayerState received_state = m.state[i];
 
@@ -102,8 +102,8 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 							{
 								LogInfo("error of(%f, %f) detected at prediction id %d, rewinding and replaying", delta_pos.X, delta_pos.Y, m.prediction_id);
 
-								p->entity->position = received_position;
-								p->entity->body->velocity = received_local_state.velocity;;
+								p->position = received_position;
+								p->body->velocity = received_local_state.velocity;;
 								p->state = received_state;
 
 								for (u32 replaying_prediction_id = m.prediction_id + 1;
@@ -115,17 +115,17 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 									PredictedMove* replaying_move = &pState->moves[replaying_index];
 									PredictedMoveResult* replaying_move_result = &pState->results[replaying_index];
 
-									UpdatePlayer(p, replaying_move->dt, replaying_move->input);
+									p->Update(&g_state, replaying_move->dt, replaying_move->input);
 									StepPhysics(&g_state.physics, ExpectedSecondsPerFrame);
 
-									replaying_move_result->position = p->entity->position;
+									replaying_move_result->position = p->position;
 									replaying_move_result->state = p->local_state;
 								}
 							}
 						}
 						else
 						{
-							p->entity->position = received_position;
+							p->position = received_position;
 							p->state = received_state;
 							SetAnimation(&p->bitmap, p->state.animation, 0.25F);
 							UpdateAnimation(&p->bitmap, pDeltaTime);
@@ -142,9 +142,9 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 				c->name[0] = 0;
 				if (g_interface.current_screen == SCREEN_Game)
 				{
-					Player* p = g_state.players.items + l.client_id;
-					RemoveEntity(&g_state.entities, p->entity);
-					RemoveRigidBody(p->entity, &g_state.physics);
+					Player* p = g_state.players.items[l.client_id];
+					RemoveEntity(&g_state.entities, p);
+					RemoveRigidBody(p, &g_state.physics);
 				}
 				break;
 			}

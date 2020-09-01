@@ -53,6 +53,7 @@ GameTransState g_transstate = {};
 #include "NetcodeCommon.cpp"
 #include "Collision.cpp"
 #include "Player.cpp"
+#include "Beer.cpp"
 #include "Level.cpp"
 
 static void SendMessageToAllConnectedClients(GameNetState* pState, u32 pSize)
@@ -75,6 +76,7 @@ static void ResetClient(Client* pClient)
 	pClient->name[0] = 0;
 }
 
+Timer beer(5.0F);
 int main()
 {
 	PlatformWorkQueue work_queue = {};
@@ -128,6 +130,16 @@ int main()
 
 		TemporaryMemoryHandle h = BeginTemporaryMemory(g_transstate.trans_arena);
 
+		if (g_net.game_started)
+		{
+			if (TickTimer(&beer, gametime.delta_time))
+			{
+				SpawnBeerEvent* e = PushGameEvent(&g_state.events, SpawnBeerEvent, GAME_EVENT_SpawnBeer);
+				e->position = V2(Random(0, g_state.map->width), Random(0, g_state.map->height));
+				StopTimer(&beer);
+			}
+		}
+		
 		u32 bytes_received = 0;
 		IPEndpoint from = {};
 		while (SocketReceive(&g_net.listen_socket, g_net.buffer, SOCKET_BUFFER_SIZE, &bytes_received, &from))
@@ -213,9 +225,9 @@ int main()
 
 				if (g_net.game_started)
 				{
-					Player* p = g_state.players.items + l.client_id;
-					RemoveEntity(&g_state.entities, p->entity);
-					RemoveRigidBody(p->entity, &g_state.physics);
+					Player* p = g_state.players.items[l.client_id];
+					RemoveEntity(&g_state.entities, p);
+					RemoveRigidBody(p, &g_state.physics);
 				}
 
 				u32 size = WriteMessage(g_net.buffer, &l, ClientLeave, SERVER_MESSAGE_LeaveAnnoucement);
@@ -262,7 +274,7 @@ int main()
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
 					Client* c = g_net.clients + i;
-					Player* p = g_state.players.items + i;
+					Player* p = g_state.players.items[i];
 					if (IsClientConnected(c))
 					{
 						if (s.roles[i] == PLAYER_ROLE_Unknown)
@@ -293,9 +305,9 @@ int main()
 				client->dt = i.dt;
 				client->input_flags = i.flags;
 
-				Player* p = g_state.players.items + client_id;
+				Player* p = g_state.players.items[client_id];
 				if(i.attack_choice >= 0) p->state.team_attack_choice = i.attack_choice;
-				UpdatePlayer(p, i.dt, i.flags);
+				p->Update(&g_state, i.dt, i.flags);
 			}
 			break;
 
@@ -341,6 +353,7 @@ int main()
 				g_state.physics.bodies.clear();
 			}
 		}
+		ProcessEvents(&g_state, &g_state.events);
 
 		ProcessTaskCallbacks(&g_state.callbacks);
 

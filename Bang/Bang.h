@@ -64,6 +64,14 @@ struct Camera
 	float zoom;
 };
 
+struct Event;
+static const u32 MAX_GAME_EVENTS = 32;
+struct EventPipe
+{
+	StaticList<Event*, MAX_GAME_EVENTS> events;
+};
+
+struct Player;
 struct PlayingSound;
 struct GameState
 {
@@ -71,12 +79,13 @@ struct GameState
 
 	EntityList entities;
 
-	StaticList<Player, MAX_PLAYERS> players;
+	StaticList<Player*, MAX_PLAYERS> players;
 	//StaticList<Beer, 3> beers;
 
 	PhysicsScene physics;
 	Camera camera;
 	TiledMap* map;
+	EventPipe events;
 
 	MemoryStack* world_arena;
 

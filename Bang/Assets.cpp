@@ -174,6 +174,8 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	AddBitmapAsset(assets, BITMAP_Title, "..\\..\\Resources\\title.png");
 	AddBitmapAsset(assets, BITMAP_Character, "..\\..\\Resources\\character.png");
 	AddBitmapAsset(assets, BITMAP_Target, "..\\..\\Resources\\renegade.png");
+	AddBitmapAsset(assets, BITMAP_Shadow, "..\\..\\Resources\\shadow.png");
+	AddBitmapAsset(assets, BITMAP_Beer, "..\\..\\Resources\\beer.png");
 	/*PackedTexture* text = new PackedTexture();
 	text->textures[0] = { BITMAP_Error, "error.png" };
 	text->textures[1] = { BITMAP_Question, "question.png" };

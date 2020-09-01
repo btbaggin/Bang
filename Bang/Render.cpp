@@ -334,6 +334,7 @@ GlyphQuad GetGlyph(RenderState* pState, FontInfo* pFont, u32 pChar, v4 pColor, f
 
 static void _PushText(RenderState* pState, FONTS pFont, const char* pText, v2 pPosition, v4 pColor, v2 pClipMin, v2 pClipMax)
 {
+	pState->z_index += 0.5F;
 	float x = pPosition.X;
 	float y = pPosition.Y;
 
@@ -394,6 +395,7 @@ static void PushClippedText(RenderState* pState, FONTS pFont, const char* pText,
 
 static void PushQuad(RenderState* pState, v2 pMin, v2 pMax, v4 pColor, Bitmap* pTexture)
 {
+	pState->z_index += 0.5F;
 	v2 uv_min = pTexture ? pTexture->uv_min : V2(0);
 	v2 uv_max = pTexture ? pTexture->uv_max : V2(1);
 
@@ -440,6 +442,7 @@ static void PushSizedQuad(RenderState* pState, v2 pMin, v2 pSize, v4 pColor)
 
 static void PushLine(RenderState* pState, v3 pP1, v3 pP2, float pSize, v4 pColor)
 {
+	pState->z_index += 0.5F;
 	Renderable_Line* line = PushRenderGroupEntry(pState, Renderable_Line, RENDER_GROUP_ENTRY_TYPE_Line);
 	line->first_vertex = pState->vertex_count;
 	line->size = pSize;
@@ -459,6 +462,7 @@ static void PushMatrix(RenderState* pState, mat4 pMatrix)
 
 static void PushParticleSystem(RenderState* pState, ParticleSystem* pSystem)
 {
+	pState->z_index += 0.5F;
 	Renderable_ParticleSystem* m = PushRenderGroupEntry(pState, Renderable_ParticleSystem, RENDER_GROUP_ENTRY_TYPE_ParticleSystem);
 	m->CBO = pSystem->CBO;
 	m->PBO = pSystem->PBO;

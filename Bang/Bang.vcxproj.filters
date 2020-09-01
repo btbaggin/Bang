@@ -148,6 +148,12 @@
     <ClCompile Include="ParticleSystem.cpp">
       <Filter>Render</Filter>
     </ClCompile>
+    <ClCompile Include="EventPipe.cpp">
+      <Filter>Netcode</Filter>
+    </ClCompile>
+    <ClCompile Include="Beer.cpp">
+      <Filter>Entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Assets">

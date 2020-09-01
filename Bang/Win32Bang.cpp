@@ -90,6 +90,7 @@ GameInput g_input = {};
 #include "Level.cpp"
 #include "Interface.cpp"
 #include "Player.cpp"
+#include "Beer.cpp"
 #include "Client.cpp"
 #include "Win32Common.cpp"
 
@@ -324,21 +325,13 @@ static void RenderGameElements(GameState* pState, RenderState* pRender)
 		RenderGame(pState, pRender);
 	}
 
-	for (u32 i = 0; i < pState->players.count; i++)
+	SetZLayer(pRender, Z_LAYER_Player);
+	for (u32 i = 0; i < pState->entities.end_index; i++)
 	{
-		Player* e = pState->players.items + i;
-		if (IsEntityValid(&pState->entities, e->entity))
+		Entity* e = pState->entities.entities[i];
+		if (IsEntityValid(&pState->entities, e))
 		{
-			RenderPlayerHeader(pRender, e);
-		}
-	}
-
-	for (u32 i = 0; i < pState->players.count; i++)
-	{
-		Player* e = pState->players.items + i;
-		if (IsEntityValid(&pState->entities, e->entity))
-		{
-			RenderPlayer(pRender, e);
+			e->Render(pRender);
 		}
 	}
 }
@@ -460,6 +453,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		UpdateInterface(&g_state, &g_interface, time.delta_time);
 		if(g_interface.current_screen == SCREEN_Game) UpdateGame(&g_state, time.delta_time, prediction_id);
 		StepPhysics(&g_state.physics, ExpectedSecondsPerFrame);
+		ProcessEvents(&g_state, &g_state.events);
 
 		ProcessTaskCallbacks(&g_state.callbacks);
 

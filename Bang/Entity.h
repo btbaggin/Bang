@@ -29,6 +29,7 @@ struct EntityIndex
 	u32 version;
 };
 
+struct RenderState;
 struct RigidBody;
 struct Entity
 {
@@ -36,12 +37,15 @@ struct Entity
 	RigidBody* body;
 
 	EntityIndex index = {};
+
+	virtual void Render(RenderState* pState) = 0;
+	virtual void Update(GameState* pState, float pDeltaTime, u32 pInputFlags) = 0;
 };
 
 struct EntityList
 {
 	u32 end_index;
-	Entity* entities;
+	Entity** entities;
 	u16* versions;
 	FreeList<u32> free_indices;
 };
@@ -95,10 +99,8 @@ struct ParticleSystem
 	u32 PBO;
 };
 
-struct Player
+struct Player : public Entity
 {
-	Entity* entity;
-
 	//Game start state
 	char name[NAME_LENGTH];
 	PLAYER_TEAMS team;
@@ -117,11 +119,23 @@ struct Player
 	SyncedPlayerState state;
 
 	PlayingSound* walking;
+
+	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
+	void Render(RenderState* pState);
 };
 
-//struct Beer
-//{
-//	Entity* entity;
-//};
+struct Wall : public Entity 
+{ 
+	void Update(GameState* pState, float pDeltatime, u32 pInputFlags) { }
+	void Render(RenderState* pState) { }
+};
 
-static void UpdatePlayer(Player* pEntity, float pDeltaTime, u32 pFlags);
+struct Beer : public Entity
+{
+	bool up;
+	float y;
+	v2 original_pos;
+	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
+	void Render(RenderState* pState);
+//	Entity* entity;
+};

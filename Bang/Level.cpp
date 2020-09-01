@@ -33,6 +33,7 @@ static void RenderTiledmap(Assets* pAssets, const char* pPath, s32 pWidth, s32 p
 
 					u32 ir = pHeight - (i / pWidth) - 1;
 					u32 ic = i % pWidth;
+					SetZLayer(g_transstate.render_state, Z_LAYER_Background1);
 					PushSizedQuad(g_transstate.render_state, V2(ic * (float)set->tilewidth, ir * (float)set->tileheight), V2((float)set->tilewidth, (float)set->tileheight), tile.bitmap);
 					break;
 				}

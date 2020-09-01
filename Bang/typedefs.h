@@ -51,7 +51,17 @@ static v2 Lerp(v2 a, float time, v2 b)
 	v2 result;
 	result.X = HMM_Lerp(a.X, time, b.X);
 	result.Y = HMM_Lerp(a.Y, time, b.Y);
+	if (abs(result.X - b.X) < 0.05) result.X = b.X;
+	if (abs(result.Y - b.Y) < 0.05) result.Y = b.Y;
 	return result;
+}
+
+static float SmoothStep(float edge0, float edge1, float x)
+{
+	// Scale, bias and saturate x to 0..1 range
+	x = clamp(0.0, (x - edge0) / (edge1 - edge0), 1.0);
+	// Evaluate polynomial
+	return x * x*(3 - 2 * x);
 }
 
 #define ArrayCount(a) sizeof(a) / sizeof(a[0])

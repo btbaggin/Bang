@@ -14,7 +14,7 @@ static void UpdateGame(GameState* pState, float pDeltaTime, u32 pPredictionId)
 	if (IsKeyDown(KEY_Space)) flags |= 1 << INPUT_Shoot;
 
 	Client* c = g_net.clients + g_net.client_id;
-	Player* p = g_state.players.items + g_net.client_id;
+	Player* p = g_state.players.items[g_net.client_id];
 
 	ClientInput i = {};
 	i.attack_choice = p->state.team_attack_choice;
@@ -25,7 +25,23 @@ static void UpdateGame(GameState* pState, float pDeltaTime, u32 pPredictionId)
 	u32 size = WriteMessage(g_net.buffer, &i, ClientInput, CLIENT_MESSAGE_Input);
 	SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
 
-	UpdatePlayer(p, pDeltaTime, flags);
+	for (u32 i = 0; i < pState->entities.end_index; i++)
+	{
+		Entity* e = pState->entities.entities[i];
+		if (IsEntityValid(&pState->entities, e))
+		{
+			if (e == p)
+			{
+				p->Update(pState, pDeltaTime, flags);
+
+			}
+			else
+			{
+				e->Update(pState, pDeltaTime, 0);
+			}
+		}
+	}
+
 
 	u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
 
@@ -34,21 +50,21 @@ static void UpdateGame(GameState* pState, float pDeltaTime, u32 pPredictionId)
 
 	move->dt = pDeltaTime;
 	move->input = flags;
-	result->position = p->entity->position;
+	result->position = p->position;
 	result->state = p->local_state;
 }
 
 static void RenderGame(GameState* pState, RenderState* pRender)
 {
 	SetZLayer(pRender, Z_LAYER_Background1);
-	UpdateCamera(pState, pState->players.items[g_net.client_id].entity);
+	UpdateCamera(pState, pState->players.items[g_net.client_id]);
 	PushSizedQuad(pRender, V2(0), V2((float)pState->map->width, (float)pState->map->height), pState->map->bitmap);
 }
 
 static void UpdateGameInterface(GameState* pState, Interface* pInterface, float pDeltaTime)
 {
 	GameScreen* screen = (GameScreen*)pInterface->current_screen_data;
-	Player* p = pState->players.items + g_net.client_id;
+	Player* p = pState->players.items[g_net.client_id];
 	if (p->state.team_attack_choice == ATTACK_PENDING)
 	{
 		if (IsKeyPressed(KEY_Q)) p->state.team_attack_choice = screen->attack_choices[0];
@@ -70,7 +86,7 @@ static void RenderGameInterface(GameState* pState, Interface* pInterface, Render
 	PushText(pRender, FONT_Debug, buffer, V2(0), COLOR_BLACK);
 
 	GameScreen* screen = (GameScreen*)pInterface->current_screen_data;
-	Player* p = pState->players.items + g_net.client_id;
+	Player* p = pState->players.items[g_net.client_id];
 
 	v2 button_size = V2(64);
 	v2 button_1 = V2(pState->form->width / 4.0F, pState->form->height - button_size.Height - 20);
