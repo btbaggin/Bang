@@ -47,12 +47,11 @@ static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, 
 
 static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 {
-
 	Player* p = CreateEntity(&pState->entities, Player);
 	p->position = V2((float)Random(0, pState->map->width), (float)Random(0, pState->map->height));
-
 	strcpy(p->name, pName);
 	p->state.team_attack_choice = ATTACK_ON_CD;
+
 	//ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
 	//options->color = V3(1);
 	//options->direction = V2(0);
@@ -82,6 +81,11 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	u32* lengths = PushArray(pState->world_arena, u32, 3);
 	lengths[0] = 6; lengths[1] = 4; lengths[2] = 6;
 	p->bitmap = CreateAnimatedBitmap(BITMAP_Character, 3, lengths, V2(48));
+
+#ifndef _SERVER
+	p->walking = LoopSound(g_transstate.assets, SOUND_Walking, 0.25F);
+	PauseSound(p->walking);
+#endif
 
 	pState->players.AddItem(p);
 	return p;
@@ -219,12 +223,11 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 #ifndef _SERVER
 	if (!IsZero(velocity))
 	{
-		if (!walking) walking = LoopSound(g_transstate.assets, SOUND_Walking, 0.25F);
-		else ResumeLoopSound(walking);
+		ResumeLoopSound(walking);
 	}
 	else
 	{
-		if (walking) PauseSound(walking);
+		PauseSound(walking);
 	}
 #endif
 

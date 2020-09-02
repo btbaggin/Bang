@@ -44,6 +44,11 @@ public:
 		}
 		return false;
 	}
+
+	void Clear()
+	{
+		list = nullptr;
+	}
 };
 
 

@@ -14,23 +14,6 @@ enum SOUND_STATUS : u8
 	SOUND_STATUS_Loop
 };
 
-struct PlayingSound
-{
-	float volume;
-	List<s16> samples;
-	u32 samples_played;
-	PlayingSound* next;
-
-	SOUND_STATUS status;
-};
-
-struct Sound
-{
-	u32 channels;
-	List<s16> samples;
-};
-
-
 enum ASSET_STATE
 {
 	ASSET_STATE_Unloaded,
@@ -101,6 +84,24 @@ struct TaskCallbackQueue
 	TaskCallback callbacks[2][32];
 	u64 i;
 };
+
+struct Sound
+{
+	u32 channels;
+	List<s16> samples;
+};
+
+struct PlayingSound
+{
+	float volume;
+	SOUNDS sound;
+	Sound* loaded_sound;
+	u32 samples_played;
+	PlayingSound* next;
+
+	SOUND_STATUS status;
+};
+
 
 struct FontInfo
 {

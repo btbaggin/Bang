@@ -1,8 +1,10 @@
 /*
 TODO:
 	Arrows
+	Positional sounds?
 	Particle systems for arrows and dust
 	intro screen for role before game starts
+	https://stackoverflow.com/questions/33858753/drawing-a-circle-using-opengl-c
 
 CLEANUP:
 	Remove flip from player?
@@ -446,9 +448,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		Win32GetInput(&g_input, g_state.form->handle);
 		Tick(&time);
 
-		ProcessServerMessages(&g_net, prediction_id, time.delta_time);
-
 		TemporaryMemoryHandle h = BeginTemporaryMemory(g_transstate.trans_arena);
+		ProcessServerMessages(&g_net, prediction_id, time.delta_time);
 
 		UpdateInterface(&g_state, &g_interface, time.delta_time);
 		if(g_interface.current_screen == SCREEN_Game) UpdateGame(&g_state, time.delta_time, prediction_id);
@@ -469,6 +470,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		RenderInterface(&g_state, &g_interface, g_transstate.render_state);
 		SwapBuffers(g_state.form);
+
+		////Loop through and check if any sounds have been loaded
+		//for (PlayingSound** s = &g_state.FirstPlaying; *s;)
+		//{
+		//	PlayingSound* current = *s;
+		//	s = &current->next;
+		//}
 
 		EndTemporaryMemory(h);
 

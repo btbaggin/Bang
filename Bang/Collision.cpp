@@ -143,7 +143,7 @@ void PolygontoCircle(Manifold* pManifold, RigidBody* a, RigidBody* b)
 float FindAxisLeastPenetration(u32* pIndex, Shape* A, Shape* B)
 {
 	float bestDistance = -FLT_MAX;
-	u32 bestIndex;
+	u32 bestIndex = 0;
 
 	for (u32 i = 0; i < A->vertex_count; ++i)
 	{

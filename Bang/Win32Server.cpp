@@ -136,11 +136,11 @@ int main()
 			if (TickTimer(&beer, gametime.delta_time))
 			{
 				SpawnBeerEvent* e = PushGameEvent(&g_state.events, SpawnBeerEvent, GAME_EVENT_SpawnBeer);
-				e->position = V2(Random(0, g_state.map->width), Random(0, g_state.map->height));
+				e->position = V2(Random(0.0F, (float)g_state.map->width), Random(0.0F, (float)g_state.map->height));
 				StopTimer(&beer);
 
 				ArrowsEvent* e2 = PushGameEvent(&g_state.events, ArrowsEvent, GAME_EVENT_Arrows);
-				e2->position = V2(Random(0, g_state.map->width), Random(0, g_state.map->height));
+				e2->position = V2(Random(0.0F, (float)g_state.map->width), Random(0.0F, (float)g_state.map->height));
 			}
 		}
 		

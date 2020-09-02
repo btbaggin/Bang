@@ -56,7 +56,6 @@ Sound* LoadSoundAsset(Assets* pAssets, const char* pFile)
 	{
 		LogError("Unable to open sound asset %s", pFile);
 	}
-	
 
 	return sound;
 }
@@ -70,38 +69,34 @@ static PlayingSound* GetAvailablePlayingSound()
 
 static PlayingSound* PlaySound(Assets* pAssets, SOUNDS pSound, float pVolume = 1.0F)
 {
-	PlayingSound* p = nullptr;
+	PlayingSound* p = GetAvailablePlayingSound();
 	Sound* sound = GetSound(pAssets, pSound);
-	if (sound)
-	{
-		p = GetAvailablePlayingSound();
-		p->samples = sound->samples;
-		p->samples_played = 0;
-		p->status = SOUND_STATUS_Play;
-		p->volume = pow(pVolume, 2.0F); //Logarithmic volume scaling
+	if (!sound) p->sound = pSound;
+	p->loaded_sound = sound;
 
-		p->next = g_state.FirstPlaying;
-		g_state.FirstPlaying = p;
-	}
+	p->samples_played = 0;
+	p->status = SOUND_STATUS_Play;
+	p->volume = pow(pVolume, 2.0F); //Logarithmic volume scaling
+
+	p->next = g_state.FirstPlaying;
+	g_state.FirstPlaying = p;
 
 	return p;
 }
 
 static PlayingSound* LoopSound(Assets* pAssets, SOUNDS pSound, float pVolume = 1.0F)
 {
-	PlayingSound* p = nullptr;
+	PlayingSound* p = GetAvailablePlayingSound();
 	Sound* sound = GetSound(pAssets, pSound);
-	if (sound)
-	{
-		p = GetAvailablePlayingSound();
-		p->samples = sound->samples;
-		p->samples_played = 0;
-		p->status = SOUND_STATUS_Loop;
-		p->volume = pow(pVolume, 2.0F); //Logarithmic volume scaling
+	if (!sound) p->sound = pSound;
+	p->loaded_sound = sound;
 
-		p->next = g_state.FirstPlaying;
-		g_state.FirstPlaying = p;
-	}
+	p->samples_played = 0;
+	p->status = SOUND_STATUS_Loop;
+	p->volume = pow(pVolume, 2.0F); //Logarithmic volume scaling
+
+	p->next = g_state.FirstPlaying;
+	g_state.FirstPlaying = p;
 
 	return p;
 }
@@ -147,24 +142,30 @@ static void GameGetSoundSamples(GameState* pState, GameTransState* pTransState, 
 		if (current)
 		{
 			bool remove = false;
-			if (current->status == SOUND_STATUS_Play ||
-				current->status == SOUND_STATUS_Loop)
+			if (!current->loaded_sound)
 			{
+				//Pretend we are playing the sound while its loading
+				current->loaded_sound = GetSound(g_transstate.assets, current->sound);
+				current->samples_played += pSound->sample_count;
+			}
+			else if (current->status == SOUND_STATUS_Play || current->status == SOUND_STATUS_Loop)
+			{
+				Sound* sound = current->loaded_sound;
 				channel0 = sound_buffer0;
 				channel1 = sound_buffer1;
 				u32 samples = pSound->sample_count;
-				u32 samples_remaining = current->samples.count - current->samples_played;
+				u32 samples_remaining = sound->samples.count - current->samples_played;
 				if (samples > samples_remaining) samples = samples_remaining;
 
 				for (u32 i = 0; i < samples; i++)
 				{
-					float sample = (float)current->samples.items[current->samples_played + i];
+					float sample = (float)sound->samples.items[current->samples_played + i];
 					*channel0++ += current->volume * sample;
 					*channel1++ += current->volume * sample;
 				}
 
 				current->samples_played += samples;
-				if (current->samples_played >= current->samples.count)
+				if (current->samples_played >= sound->samples.count)
 				{
 					if (current->status == SOUND_STATUS_Loop)
 					{

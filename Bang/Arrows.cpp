@@ -10,6 +10,7 @@ static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 
 void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 {
+	//if(!sound) sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F);
 	life -= pDeltatime;
 	if (life <= 0)
 	{

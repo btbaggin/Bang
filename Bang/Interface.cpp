@@ -83,6 +83,7 @@ static void TransitionScreen(GameState* pState, Interface* pInterface, GAME_SCRE
 {
 	EndTemporaryMemory(pState->screen_reset);
 	ClearEntityList(&pState->entities);
+	g_transstate.available_sounds.Clear();
 
 	pInterface->current_screen = pLevel;
 
