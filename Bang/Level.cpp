@@ -1,7 +1,6 @@
 //https://github.com/RandyGaul/cute_headers/blob/master/cute_tiled.h
 //http://www.mapeditor.org/
 #include "LevelCollisionMask.cpp"
-//TODO collision
 #ifndef _SERVER
 static void RenderTiledmap(Assets* pAssets, const char* pPath, s32 pWidth, s32 pHeight, TilesetList pTiles, cute_tiled_layer_t* pLayer)
 {

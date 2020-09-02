@@ -154,6 +154,9 @@
     <ClCompile Include="Beer.cpp">
       <Filter>Entities</Filter>
     </ClCompile>
+    <ClCompile Include="Arrows.cpp">
+      <Filter>Entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Assets">

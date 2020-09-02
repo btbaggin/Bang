@@ -153,17 +153,18 @@ static void GetLevelCollisionMask(cute_tiled_map_t* pMap, cute_tiled_layer_t* pL
 	for (int y = 0; y < pMap->height; y++) {
 		for (int x = 0; x < pMap->width; x++) {
 			u16 width = output[(y * pMap->width + x) * 2];
-			u16 heigh = output[(y * pMap->width + x) * 2 + 1];
+			u16 height = output[(y * pMap->width + x) * 2 + 1];
 			if (width > 0)
 			{
-				//TODO dont hardcode 32
+				float w = (float)pMap->tilewidth;
+				float h = (float)pMap->tileheight;
 				Wall* e = CreateEntity(&g_state.entities, Wall);
 				
-				e->position = V2(x * 32.0F, y * 32.0F);
+				e->position = V2(x * w, y * h);
 
 				RigidBodyCreationOptions o = {};
-				o.height = heigh * 32.0F;
-				o.width = width * 32.0F;
+				o.height = height * h;
+				o.width = width * w;
 				o.entity = e;
 				o.type = SHAPE_Poly;
 

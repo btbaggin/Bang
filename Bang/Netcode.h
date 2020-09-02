@@ -56,6 +56,7 @@ struct SyncedPlayerState
 struct LocalPlayerState
 {
 	v2 velocity;
+	u8 beers;
 };
 struct PredictedMove
 {

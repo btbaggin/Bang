@@ -21,11 +21,3 @@ struct TiledMap
 	u32 width;
 	u32 height;
 };
-
-struct CollisionMap
-{
-	u32 width;
-	u32 height;
-	//TODO ????
-};
-

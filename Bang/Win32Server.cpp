@@ -54,6 +54,7 @@ GameTransState g_transstate = {};
 #include "Collision.cpp"
 #include "Player.cpp"
 #include "Beer.cpp"
+#include "Arrows.cpp"
 #include "Level.cpp"
 
 static void SendMessageToAllConnectedClients(GameNetState* pState, u32 pSize)
@@ -137,6 +138,9 @@ int main()
 				SpawnBeerEvent* e = PushGameEvent(&g_state.events, SpawnBeerEvent, GAME_EVENT_SpawnBeer);
 				e->position = V2(Random(0, g_state.map->width), Random(0, g_state.map->height));
 				StopTimer(&beer);
+
+				ArrowsEvent* e2 = PushGameEvent(&g_state.events, ArrowsEvent, GAME_EVENT_Arrows);
+				e2->position = V2(Random(0, g_state.map->width), Random(0, g_state.map->height));
 			}
 		}
 		

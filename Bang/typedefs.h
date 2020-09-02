@@ -58,9 +58,7 @@ static v2 Lerp(v2 a, float time, v2 b)
 
 static float SmoothStep(float edge0, float edge1, float x)
 {
-	// Scale, bias and saturate x to 0..1 range
-	x = clamp(0.0, (x - edge0) / (edge1 - edge0), 1.0);
-	// Evaluate polynomial
+	return clamp(0.0, (x - edge0) / (edge1 - edge0), 1.0);
 	return x * x*(3 - 2 * x);
 }
 

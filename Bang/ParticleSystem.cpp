@@ -107,7 +107,6 @@ static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreati
 		random_direction = {};
 	}
 
-	//TODO allow completely random or just random in non-direction directions? should be able to use glm::dot for that
 	pParticle->velocity = (pOptions->direction + random_direction) * Random(pOptions->speed_min, pOptions->speed_max);
 }
 

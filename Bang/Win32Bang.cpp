@@ -1,7 +1,6 @@
 /*
 TODO:
 	Arrows
-	Beers
 	Particle systems for arrows and dust
 	intro screen for role before game starts
 
@@ -91,6 +90,7 @@ GameInput g_input = {};
 #include "Interface.cpp"
 #include "Player.cpp"
 #include "Beer.cpp"
+#include "Arrows.cpp"
 #include "Client.cpp"
 #include "Win32Common.cpp"
 

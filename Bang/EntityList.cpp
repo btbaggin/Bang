@@ -9,8 +9,8 @@ static EntityList GetEntityList(MemoryStack* pStack)
 }
 
 //https://stackoverflow.com/questions/222557/what-uses-are-there-for-placement-new
-#define CreateEntity(list, type) (type*)AddEntity(list, new(PushStruct(g_state.world_arena, type)) type);
-static Entity* AddEntity(EntityList* pList, Entity* pEntity)
+#define CreateEntity(list, struct_type) (struct_type*)AddEntity(list, new(PushStruct(g_state.world_arena, struct_type)) struct_type, ENTITY_TYPE_##struct_type##);
+static Entity* AddEntity(EntityList* pList, Entity* pEntity, ENTITY_TYPES pType)
 {
 	u32 index = pList->free_indices.Request();
 	if (!index)
@@ -27,6 +27,7 @@ static Entity* AddEntity(EntityList* pList, Entity* pEntity)
 
 	pList->entities[index] = pEntity;
 	pEntity->index = i;
+	pEntity->type = pType;
 
 	return pEntity;
 }
@@ -67,5 +68,21 @@ static void ClearEntityList(EntityList* pList)
 	for (u32 i = 0; i < MAX_ENTITIES; i++)
 	{
 		pList->versions[i]++;
+	}
+}
+
+static void FindEntitiesWithinRange(EntityList* pList, v2 pPosition, float pRange, Entity** pEntities, u32* pCount, ENTITY_TYPES pType = ENTITY_TYPE_None)
+{
+	*pCount = 0;
+	for (u32 i = 0; i < pList->end_index; i++)
+	{
+		Entity* e = pList->entities[i];
+		if (IsEntityValid(&g_state.entities, e) && HMM_LengthSquared(pPosition - e->position) < pRange * pRange)
+		{
+			if (pType != ENTITY_TYPE_None && pType == e->type)
+			{
+				pEntities[(*pCount)++] = e;
+			}
+		}
 	}
 }

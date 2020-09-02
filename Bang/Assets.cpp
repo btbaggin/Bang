@@ -163,6 +163,7 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 
 	AddSoundAsset(assets, SOUND_Beep, "..\\..\\Resources\\beep.wav");
 	AddSoundAsset(assets, SOUND_Walking, "..\\..\\Resources\\walking.wav");
+	AddSoundAsset(assets, SOUND_Arrows, "..\\..\\Resources\\arrows.wav");
 	//AddBitmapAsset(assets, BITMAP_Background, ".\\Assets\\background.jpg");
 	//AddBitmapAsset(assets, BITMAP_Placeholder, ".\\Assets\\placeholder.jpg");
 

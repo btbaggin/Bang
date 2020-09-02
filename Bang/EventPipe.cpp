@@ -1,6 +1,7 @@
 enum GAME_EVENTS : u8
 {
 	GAME_EVENT_SpawnBeer,
+	GAME_EVENT_Arrows,
 };
 
 struct Event
@@ -12,6 +13,15 @@ struct SpawnBeerEvent : Event
 {
 	v2 position;
 };
+
+struct ArrowsEvent : Event
+{
+	v2 position;
+};
+
+#define DeserializeEvent(type)	{ type* ev = PushStruct(g_transstate.trans_arena, type); \
+Deserialize(pBuffer, ev, type); \
+pPipe->events.AddItem(ev);  }
 
 #define PushGameEvent(pPipe, type, evnt) (type*)PushEvent(pPipe, PushStruct(g_transstate.trans_arena, type), evnt)
 static Event* PushEvent(EventPipe* pPipe, Event* pEvent, GAME_EVENTS pType)
@@ -38,6 +48,10 @@ static u32 SerializeEvents(u8** pBuffer, EventPipe* pPipe)
 				size += Serialize(pBuffer, e, SpawnBeerEvent);
 				break;
 
+			case GAME_EVENT_Arrows:
+				size += Serialize(pBuffer, e, ArrowsEvent);
+				break;
+
 			default:
 				assert(false);
 		}
@@ -56,12 +70,12 @@ static void DeserializeEvents(u8** pBuffer, EventPipe* pPipe)
 		switch (e)
 		{
 			case GAME_EVENT_SpawnBeer:
-			{
-				SpawnBeerEvent* ev = PushStruct(g_transstate.trans_arena, SpawnBeerEvent);
-				Deserialize(pBuffer, ev, SpawnBeerEvent);
-				pPipe->events.AddItem(ev);
-			}
-			break;
+				DeserializeEvent(SpawnBeerEvent);
+				break;
+
+			case GAME_EVENT_Arrows:
+				DeserializeEvent(ArrowsEvent);
+				break;
 
 			default:
 				assert(false);
@@ -79,9 +93,15 @@ static void ProcessEvents(GameState* pState, EventPipe* pPipe)
 			case GAME_EVENT_SpawnBeer:
 			{
 				SpawnBeerEvent* beer = (SpawnBeerEvent*)e;
-				Beer* b = CreateEntity(&pState->entities, Beer);
-				b->position = beer->position;
-				b->original_pos = beer->position;
+				CreateBeer(pState, beer);
+			}
+			break;
+
+			case GAME_EVENT_Arrows:
+			{
+				ArrowsEvent* arrow = (ArrowsEvent*)e;
+				CreateArrow(pState, arrow);
+
 			}
 			break;
 

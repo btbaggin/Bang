@@ -78,6 +78,7 @@ enum SOUNDS : u8
 {
 	SOUND_Beep,
 	SOUND_Walking,
+	SOUND_Arrows,
 	SOUND_COUNT
 };
 

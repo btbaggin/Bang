@@ -44,7 +44,6 @@ static void UpdateGame(GameState* pState, float pDeltaTime, u32 pPredictionId)
 
 
 	u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
-
 	PredictedMove* move = &g_net.moves[index];
 	PredictedMoveResult* result = &g_net.results[index];
 
@@ -91,19 +90,24 @@ static void RenderGameInterface(GameState* pState, Interface* pInterface, Render
 	v2 button_size = V2(64);
 	v2 button_1 = V2(pState->form->width / 4.0F, pState->form->height - button_size.Height - 20);
 	v2 button_2 = V2(pState->form->width - button_1.X - button_size.Width, pState->form->height - button_size.Height - 20);
-	v2 button_mid = CenterText(FONT_Title, "Q", button_size);
 	if (p->state.team_attack_choice == ATTACK_ROLLING)
 	{
 		PushSizedQuad(pRender, button_1, button_size, team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)], GetBitmap(g_transstate.assets, BITMAP_Target));
 		PushSizedQuad(pRender, button_2, button_size, team_colors[Random(0, (u32)PLAYER_TEAM_COUNT)], GetBitmap(g_transstate.assets, BITMAP_Target));
-		PushText(pRender, FONT_Title, "Q", button_1 + button_mid, V4(0, 0, 0, 1));
-		PushText(pRender, FONT_Title, "E", button_2 + button_mid, V4(0, 0, 0, 1));
 	}
 	else if (p->state.team_attack_choice == ATTACK_PENDING)
 	{
+		v2 button_mid = CenterText(FONT_Title, "Q", button_size);
 		PushSizedQuad(pRender, button_1, button_size, team_colors[screen->attack_choices[0]], GetBitmap(g_transstate.assets, BITMAP_Target));
 		PushSizedQuad(pRender, button_2, button_size, team_colors[screen->attack_choices[1]], GetBitmap(g_transstate.assets, BITMAP_Target));
 		PushText(pRender, FONT_Title, "Q", button_1 + button_mid, V4(0, 0, 0, 1));
 		PushText(pRender, FONT_Title, "E", button_2 + button_mid, V4(0, 0, 0, 1));
+	}
+
+	v2 beer_pos = V2(pState->form->width - 32, 0);
+	for (u32 i = 0; i < p->local_state.beers; i++)
+	{
+		PushSizedQuad(pRender, beer_pos, V2(32), GetBitmap(g_transstate.assets, BITMAP_Beer));
+		beer_pos.X -= 32;
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 const u32 MAX_ENTITIES = 1024;
+const u32 MAX_BEERS = 3;
 
 enum PLAYER_ROLES : u8
 {
@@ -23,6 +24,15 @@ enum PLAYER_TEAMS : u8
 };
 v4 team_colors[] = { V4(1, 1, 0, 1), V4(0.5F, 0.75F, 1, 1), V4(0.45F, 0.5F, 0.2F, 1) };
 
+enum ENTITY_TYPES : u8
+{
+	ENTITY_TYPE_None,
+	ENTITY_TYPE_Player,
+	ENTITY_TYPE_Beer,
+	ENTITY_TYPE_Wall,
+	ENTITY_TYPE_Arrows,
+};
+
 struct EntityIndex
 {
 	u32 index;
@@ -37,6 +47,7 @@ struct Entity
 	RigidBody* body;
 
 	EntityIndex index = {};
+	ENTITY_TYPES type;
 
 	virtual void Render(RenderState* pState) = 0;
 	virtual void Update(GameState* pState, float pDeltaTime, u32 pInputFlags) = 0;
@@ -133,9 +144,21 @@ struct Wall : public Entity
 struct Beer : public Entity
 {
 	bool up;
-	float y;
+	float life;
 	v2 original_pos;
 	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
 	void Render(RenderState* pState);
-//	Entity* entity;
 };
+
+struct Arrows : public Entity
+{
+	PlayingSound* sound;
+	float life;
+	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
+	void Render(RenderState* pState);
+};
+
+struct SpawnBeerEvent;
+struct ArrowsEvent;
+static Beer* CreateBeer(GameState* pState, SpawnBeerEvent* pEvent);
+static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent);

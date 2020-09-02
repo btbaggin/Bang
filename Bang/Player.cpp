@@ -26,25 +26,65 @@ static void AttackPlayer(Player* pPlayer)
 }
 
 
-static Player* FindPlayersWithinAttackRange(Player* pPlayer, PLAYER_TEAMS pTeam)
+static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, PLAYER_TEAMS pTeam)
 {
-	u32 range = GetSetting(&g_state.config, "player_attack_range")->i;
-	for (u32 i = 0; i < MAX_PLAYERS; i++)
+	u32 range = GetSetting(&pState->config, "player_attack_range")->i;
+	Entity* entities[20];
+	u32 count;
+	FindEntitiesWithinRange(&pState->entities, pPlayer->position, (float)range, entities, &count, ENTITY_TYPE_Player);
+
+	for (u32 i = 0; i < count; i++)
 	{
-		Player* p = g_state.players.items[i];
-		if (p != pPlayer &&
-			IsEntityValid(&g_state.entities, p) &&
-			p->team == pTeam &&
-			!TimerIsStarted(&p->invuln_timer))
+		Player* p = (Player*)entities[i];
+		if (p != pPlayer && p->team == pTeam && !TimerIsStarted(&p->invuln_timer))
 		{
-			if (HMM_LengthSquared(p->position - pPlayer->position) < range * range)
-			{
-				return p;
-			}
+			return p;
 		}
 	}
 
 	return nullptr;
+}
+
+static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
+{
+
+	Player* p = CreateEntity(&pState->entities, Player);
+	p->position = V2((float)Random(0, pState->map->width), (float)Random(0, pState->map->height));
+
+	strcpy(p->name, pName);
+	p->state.team_attack_choice = ATTACK_ON_CD;
+	//ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
+	//options->color = V3(1);
+	//options->direction = V2(0);
+	//options->life_min = 0.5F; options->life_max = 1.0F;
+	//options->size_min = 10; options->size_max = 32;
+	//options->speed_min = 1; options->speed_max = 5;
+	//options->spread = 0;
+	//p.dust = SpawnParticleSystem(3, 5, BITMAP_MainMenu1, options);
+
+	u32 health = GetSetting(&g_state.config, "player_health")->i;
+	p->local_state = {};
+	p->state.health = health;
+	p->state.animation = PLAYER_ANIMATION_Idle;
+
+	RigidBodyCreationOptions o;
+	o.density = 1.0F;
+	o.type = SHAPE_Poly;
+	o.width = 40;
+	o.offset = V2(12, 0);
+	o.height = PLAYER_SIZE;
+	o.entity = p;
+	o.material.dynamic_friction = 0.2F;
+	o.material.static_friction = 0.1F;
+
+	p->body = AddRigidBody(pState->world_arena, &pState->physics, &o);
+
+	u32* lengths = PushArray(pState->world_arena, u32, 3);
+	lengths[0] = 6; lengths[1] = 4; lengths[2] = 6;
+	p->bitmap = CreateAnimatedBitmap(BITMAP_Character, 3, lengths, V2(48));
+
+	pState->players.AddItem(p);
+	return p;
 }
 
 void Player::Render(RenderState* pState)
@@ -138,7 +178,7 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 		}
 		else if (state.team_attack_choice >= 0)
 		{
-			Player* attackee = FindPlayersWithinAttackRange(this, (PLAYER_TEAMS)state.team_attack_choice);
+			Player* attackee = FindPlayersWithinAttackRange(pState, this, (PLAYER_TEAMS)state.team_attack_choice);
 			if (attackee)
 			{
 				AttackPlayer(attackee);
@@ -158,9 +198,6 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	}
 	UpdateAnimation(&bitmap, pDeltaTime);
 	state.animation = bitmap.current_animation;
-
-	//Invulnerability after being attacked
-	if (TickTimer(&invuln_timer, pDeltaTime)) StopTimer(&invuln_timer);
 
 	if (state.team_attack_choice == ATTACK_ROLLING && TickTimer(&attack_choose_timer, pDeltaTime))
 	{
@@ -191,113 +228,22 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	}
 #endif
 
+	//Invulnerability after being attacked
+	if (TickTimer(&invuln_timer, pDeltaTime)) StopTimer(&invuln_timer);
+
+	if (local_state.beers < MAX_BEERS)
+	{
+		Entity* entities[10];
+		u32 count;
+		FindEntitiesWithinRange(&pState->entities, position, 64.0F, entities, &count, ENTITY_TYPE_Beer);
+		if (count > 0)
+		{
+			local_state.beers++;
+			RemoveEntity(&pState->entities, entities[0]);
+		}
+	}
+
 	position += velocity;
 	position.X = clamp(0.0F, position.X, (float)g_state.map->width);
 	position.Y = clamp(0.0F, position.Y, (float)g_state.map->height);
 };
-
-
-static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
-{
-	
-	Player* p = CreateEntity(&pState->entities, Player);
-	p->position = V2((float)Random(0, pState->map->width), (float)Random(0, pState->map->height));
-
-	strcpy(p->name, pName);
-	p->state.team_attack_choice = ATTACK_ON_CD;
-	//ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
-	//options->color = V3(1);
-	//options->direction = V2(0);
-	//options->life_min = 0.5F; options->life_max = 1.0F;
-	//options->size_min = 10; options->size_max = 32;
-	//options->speed_min = 1; options->speed_max = 5;
-	//options->spread = 0;
-	//p.dust = SpawnParticleSystem(3, 5, BITMAP_MainMenu1, options);
-
-	u32 health = GetSetting(&g_state.config, "player_health")->i;
-	p->local_state = {};
-	p->state.health = health;
-	p->state.animation = PLAYER_ANIMATION_Idle;
-
-	RigidBodyCreationOptions o;
-	o.density = 1.0F;
-	o.type = SHAPE_Poly;
-	o.width = 40;
-	o.offset = V2(12, 0);
-	o.height = PLAYER_SIZE;
-	o.entity = p;
-	o.material.dynamic_friction = 0.2F;
-	o.material.static_friction = 0.1F;
-
-	p->body = AddRigidBody(pState->world_arena, &pState->physics, &o);
-
-	u32* lengths = PushArray(pState->world_arena, u32, 3);
-	lengths[0] = 6; lengths[1] = 4; lengths[2] = 6;
-	p->bitmap = CreateAnimatedBitmap(BITMAP_Character, 3, lengths, V2(48));
-
-	pState->players.AddItem(p);
-	return p;
-}
-
-#ifndef _SERVER
-//static void RenderPlayerHeader(RenderState* pState, Player* pEntity)
-//{
-//	const float MARGIN = 5.0F;
-//	const float HEADER_HEIGHT = 24.0F;
-//	const float HEADER_WIDTH = 96.0F;
-//	v2 pos = pEntity->position - V2((HEADER_WIDTH - PLAYER_SIZE) / 2.0F, HEADER_HEIGHT / 2.0F);
-//
-//	v4 color = V4(1);
-//	switch (pEntity->role)
-//	{
-//	case PLAYER_ROLE_Sheriff:
-//		color = V4(1, 1, 0, 1);
-//		break;
-//	case PLAYER_ROLE_Outlaw:
-//		color = V4(0.3F, 0.3F, 0.3F, 1);
-//		break;
-//	case PLAYER_ROLE_Renegade:
-//		color = V4(1, 0, 0, 1);
-//		break;
-//	case PLAYER_ROLE_Deputy:
-//		color = V4(1, 1, 0, 1);
-//		break;
-//	case PLAYER_ROLE_Unknown:
-//		break;
-//	}
-//
-//	//Header background
-//	SetZLayer(pState, Z_LAYER_Background2);
-//	PushSizedQuad(pState, pos, V2(HEADER_WIDTH + MARGIN * 2, HEADER_HEIGHT + MARGIN * 2), color);
-//
-//	if (pEntity->state.team_attack_choice >= 0)
-//	{
-//		PushSizedQuad(pState, pos - V2(24, 0), V2(24), team_colors[pEntity->state.team_attack_choice], GetBitmap(g_transstate.assets, BITMAP_Target));
-//	}
-//
-//	pos += V2(MARGIN);
-//
-//	//Name
-//	SetZLayer(pState, Z_LAYER_Background3);
-//	PushText(pState, FONT_Normal, pEntity->name, pos, V4(1));
-//
-//	//Health bar
-//	u32 max_health = GetSetting(&g_state.config, "player_health")->i;
-//	PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH, 12), V4(1, 0, 0, 1));
-//	SetZLayer(pState, Z_LAYER_Background4);
-//	PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH * (pEntity->state.health / (float)max_health), 12), V4(0, 1, 0, 1));
-//}
-//
-//static void RenderPlayer(RenderState* pState, Player* pEntity)
-//{
-//	const v2 size = V2(PLAYER_SIZE);
-//	v4 color = team_colors[pEntity->team];
-//	//Player
-//	SetZLayer(pState, Z_LAYER_Player);
-//	RenderAnimation(pState, pEntity->position, size, color, &pEntity->bitmap, pEntity->flip);
-//
-//	PushSizedQuad(pState, pEntity->position + V2(PLAYER_SIZE / 2.0F, PLAYER_SIZE), V2(PLAYER_SIZE, 48), GetBitmap(g_transstate.assets, BITMAP_Shadow));
-//	//SetZLayer(pState, Z_LAYER_Ui);
-//	//PushParticleSystem(pState, &pEntity->dust);
-//}
-#endif
