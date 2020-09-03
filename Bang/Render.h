@@ -1,6 +1,6 @@
 #pragma once
 #include "shaders.h"
-const float Z_INDEX_DEPTH = 10.0F;
+const float Z_INDEX_DEPTH = 20.0F;
 enum Z_LAYERS
 {
 	Z_LAYER_Background1,

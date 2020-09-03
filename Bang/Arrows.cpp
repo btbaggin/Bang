@@ -1,8 +1,10 @@
 static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 {
 	Arrows* b = CreateEntity(&pState->entities, Arrows);
+#ifndef _SERVER
 	b->sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F);
-	b->life = 15;
+#endif
+	b->life = 20;
 	b->position = pEvent->position;
 
 	return b;
@@ -11,10 +13,22 @@ static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 {
 	//if(!sound) sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F);
+	Entity* entities[MAX_PLAYERS];
+	u32 count;
+	FindEntitiesWithinRange(&pState->entities, position, 128, entities, &count, ENTITY_TYPE_Player);
+
+	for (u32 i = 0; i < count; i++)
+	{
+		Player* p = (Player*)entities[i];
+		DamagePlayer(p);
+	}
+
 	life -= pDeltatime;
 	if (life <= 0)
 	{
+#ifndef _SERVER
 		StopSound(sound);
+#endif
 		RemoveEntity(&pState->entities, this);
 	}
 }
