@@ -24,6 +24,8 @@ enum SERVER_MESSAGES : u8
 	SERVER_MESSAGE_JoinAnnouncement,
 	SERVER_MESSAGE_GameStartAnnoucement,
 	SERVER_MESSAGE_State,
+	SERVER_MESSAGE_PlayerDied,
+	SERVER_MESSAGE_GameOver,
 	SERVER_MESSAGE_LeaveAnnoucement,
 };
 
@@ -53,6 +55,10 @@ struct SyncedPlayerState
 	u8 health;
 	s8 team_attack_choice;
 };
+static bool SynedStateHasChanged(SyncedPlayerState* pP1, SyncedPlayerState* pP2)
+{
+	return memcmp(pP1, pP2, sizeof(SyncedPlayerState));
+}
 struct LocalPlayerState
 {
 	v2 velocity;

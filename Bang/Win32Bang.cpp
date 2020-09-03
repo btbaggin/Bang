@@ -3,7 +3,6 @@ TODO:
 	Arrows
 	Positional sounds?
 	Particle systems for arrows and dust
-	intro screen for role before game starts
 	https://stackoverflow.com/questions/33858753/drawing-a-circle-using-opengl-c
 
 CLEANUP:
@@ -12,7 +11,7 @@ CLEANUP:
 	Outline player when you can attack?
 
 BUGS:
-	Player render with transparent overlap
+	Player animation not syncing
 */
 
 #pragma comment(lib, "XInput.lib") 
@@ -470,13 +469,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		RenderInterface(&g_state, &g_interface, g_transstate.render_state);
 		SwapBuffers(g_state.form);
-
-		////Loop through and check if any sounds have been loaded
-		//for (PlayingSound** s = &g_state.FirstPlaying; *s;)
-		//{
-		//	PlayingSound* current = *s;
-		//	s = &current->next;
-		//}
 
 		EndTemporaryMemory(h);
 

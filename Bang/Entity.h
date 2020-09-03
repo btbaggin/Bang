@@ -121,6 +121,7 @@ struct Player : public Entity
 	AnimatedBitmap bitmap;
 	bool flip; //TODO remove eventually?
 	Timer invuln_timer;
+	bool death_message_sent;
 
 	Timer attack_choose_timer;
 	//ParticleSystem dust;

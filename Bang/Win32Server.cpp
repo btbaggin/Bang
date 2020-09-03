@@ -77,6 +77,45 @@ static void ResetClient(Client* pClient)
 	pClient->name[0] = 0;
 }
 
+static bool EvaluateWinCondition(GameState* pState, PLAYER_ROLES* pWinner)
+{
+	u32 outlaws = 0;
+	u32 players = 0;
+	for (u32 i = 0; i < MAX_PLAYERS; i++)
+	{
+		Player* p = pState->players.items[i];
+		if (IsEntityValid(&pState->entities, p))
+		{
+			if (p->state.health <= 0)
+			{
+				if (p->role == PLAYER_ROLE_Sheriff)
+				{
+					*pWinner = PLAYER_ROLE_Outlaw;
+					return true;
+				}
+			}
+			else
+			{
+				if (p->role == PLAYER_ROLE_Outlaw) outlaws++;
+				players++;
+			}
+		}
+	}
+
+	if (outlaws == 0)
+	{
+		*pWinner = PLAYER_ROLE_Sheriff;
+		return true;
+	}
+	else if (players == 1)
+	{
+		*pWinner = PLAYER_ROLE_Renegade;
+		return true;
+	}
+
+	return false;
+}
+
 Timer beer(5.0F);
 int main()
 {
@@ -312,6 +351,28 @@ int main()
 				Player* p = g_state.players.items[client_id];
 				if(i.attack_choice >= 0) p->state.team_attack_choice = i.attack_choice;
 				p->Update(&g_state, i.dt, i.flags);
+
+				if (p->state.health <= 0 && !p->death_message_sent)
+				{
+					PLAYER_ROLES winner;
+					if (EvaluateWinCondition(&g_state, &winner))
+					{
+						GameOverMessage m;
+						m.winner = winner;
+						u32 size = WriteMessage(g_net.buffer, &m, GameOverMessage, SERVER_MESSAGE_GameOver);
+						SendMessageToAllConnectedClients(&g_net, size);
+						g_net.game_started = false;
+					}
+					else
+					{
+						PlayerDiedMessage m;
+						m.client_id = client_id;
+						m.role = p->role;
+						u32 size = WriteMessage(g_net.buffer, &m, PlayerDiedMessage, SERVER_MESSAGE_PlayerDied);
+						SendMessageToAllConnectedClients(&g_net, size);
+						p->death_message_sent = true;
+					}
+				}
 			}
 			break;
 
@@ -320,6 +381,17 @@ int main()
 				break;
 			}
 		}
+
+		for (u32 i = 0; i < g_state.entities.end_index; i++)
+		{
+			//Players gaet updated when the client sends an input packet
+			Entity* e = g_state.entities.entities[i];
+			if (IsEntityValid(&g_state.entities, e) && e->type != ENTITY_TYPE_Player)
+			{
+				e->Update(&g_state, gametime.delta_time, 0);
+			}
+		}		
+
 		StepPhysics(&g_state.physics, ExpectedSecondsPerFrame);
 
 		bool client_connected = false;

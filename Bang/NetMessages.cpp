@@ -32,6 +32,15 @@ struct GameStateMessage : public ServerMessage
 	v2 positions[MAX_PLAYERS];
 	SyncedPlayerState state[MAX_PLAYERS];
 };
+struct PlayerDiedMessage : public ServerMessage
+{
+	u8 client_id;
+	PLAYER_ROLES role;
+};
+struct GameOverMessage : public ServerMessage
+{
+	PLAYER_ROLES winner;
+};
 
 //Client -> server messages
 struct ClientLeave : public ClientMessage { };
