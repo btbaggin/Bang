@@ -15,6 +15,7 @@ struct LobbyScreen
 struct GameScreen
 {
 	PLAYER_TEAMS attack_choices[2];
+	float intro_screen;
 };
 
 static float GetModalSize(MODAL_SIZES pSize)
