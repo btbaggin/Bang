@@ -98,7 +98,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 							u32 index = m.prediction_id & PREDICTION_BUFFER_MASK;
 							v2 delta_pos = received_position - pState->results[index].position;
 
-							if (HMM_LengthSquared(delta_pos) > 0.001f * 0.001f)
+							if (HMM_LengthSquared(delta_pos) > 0.001f * 0.001f || SynedStateHasChanged(&received_state, &p->state))
 							{
 								LogInfo("error of(%f, %f) detected at prediction id %d, rewinding and replaying", delta_pos.X, delta_pos.Y, m.prediction_id);
 
@@ -133,6 +133,16 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 					}
 					c->time_since_last_packet = 0;
 				}
+			}
+			break;
+
+			case SERVER_MESSAGE_PlayerDied:
+			{
+				ReadMessage(pState->buffer, m, PlayerDiedMessage);
+				Player* p = g_state.players.items[m.client_id];
+				p->state.health = 0;
+				p->role = m.role;
+				RemoveRigidBody(p, &g_state.physics);
 			}
 			break;
 
