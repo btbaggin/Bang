@@ -124,7 +124,7 @@ struct Player : public Entity
 	bool death_message_sent;
 
 	Timer attack_choose_timer;
-	//ParticleSystem dust;
+	ParticleSystem dust;
 
 	//Synced state
 	LocalPlayerState local_state;

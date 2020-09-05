@@ -59,7 +59,7 @@ class GameStartModal : public ModalWindowContent
 	virtual void OnAccept() 
 	{ 
 		strcpy(g_net.clients[g_net.client_id].name, name.string);
-		TransitionScreen(&g_state, &g_interface, SCREEN_Lobby);
+		EndScreen(1.0F);
 	};
 
 	float GetHeight()

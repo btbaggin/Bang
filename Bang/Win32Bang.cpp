@@ -1,17 +1,14 @@
 /*
 TODO:
-	Arrows
 	Positional sounds?
 	Particle systems for arrows and dust
 	https://stackoverflow.com/questions/33858753/drawing-a-circle-using-opengl-c
 
 CLEANUP:
-	Remove flip from player?
 	Player hurt animation thingy
 	Outline player when you can attack?
 
 BUGS:
-	Player animation not syncing
 */
 
 #pragma comment(lib, "XInput.lib") 
@@ -321,9 +318,9 @@ void Win32GetInput(GameInput* pInput, HWND pHandle)
 
 static void RenderGameElements(GameState* pState, RenderState* pRender)
 {
-	if(g_interface.current_screen == SCREEN_Game)
+	if(pState->game_started)
 	{
-		RenderGame(pState, pRender);
+		g_interface.current_screen->Render(pRender, pState);
 	}
 
 	SetZLayer(pRender, Z_LAYER_Player);
@@ -376,7 +373,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	g_state.config = LoadConfigFile(CONFIG_FILE_LOCATION, g_state.world_arena);
 	g_state.screen_reset = BeginTemporaryMemory(g_state.world_arena);
 
-	TransitionScreen(&g_state, &g_interface, SCREEN_MainMenu);
+	g_interface.current_screen = PushClass(g_state.world_arena, MainMenu);
+	g_interface.current_screen->Load(&g_state);
 
 	u32 trans_size = Megabytes(64);
 	void* trans_memory = VirtualAlloc(NULL, trans_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -384,7 +382,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	g_transstate.trans_arena = CreateMemoryStack(trans_memory, trans_size);
 	g_transstate.render_state = new RenderState();
-
 
 	//Renderer init
 	InitializeRenderer(g_transstate.render_state);
@@ -451,7 +448,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		ProcessServerMessages(&g_net, prediction_id, time.delta_time);
 
 		UpdateInterface(&g_state, &g_interface, time.delta_time);
-		if(g_interface.current_screen == SCREEN_Game) UpdateGame(&g_state, time.delta_time, prediction_id);
+		g_interface.current_screen->Update(&g_state, time.delta_time, prediction_id);
+		if (g_interface.transition_time > 0)
+		{
+			g_interface.transition_time -= time.delta_time;
+			if (g_interface.transition_time <= 0) LoadNextScreen();
+		}
+
 		StepPhysics(&g_state.physics, ExpectedSecondsPerFrame);
 		ProcessEvents(&g_state, &g_state.events);
 

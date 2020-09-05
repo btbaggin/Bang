@@ -1,12 +1,3 @@
-struct Button : UiElement
-{
-	v2 size;
-	v4 color;
-	bool clicked;
-	char text[10];
-	BITMAPS bitmap;
-};
-
 static bool IsClicked(Button* pButton, v2 pPosition)
 {
 	v2 pos = GetMousePosition() - pPosition;

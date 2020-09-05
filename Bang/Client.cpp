@@ -42,9 +42,6 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			{
 			case SERVER_MESSAGE_JoinAnnouncement:
 			{
-				assert(g_interface.current_screen == SCREEN_Lobby);
-				LobbyScreen* lobby = (LobbyScreen*)g_interface.current_screen_data;
-
 				ReadMessage(pState->buffer, j, JoinAnnoucement);
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
@@ -58,7 +55,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 				ReadMessage(pState->buffer, s, GameStartAnnoucement);
 				srand(s.time);
 
-				TransitionScreen(&g_state, &g_interface, SCREEN_Game);
+				EndScreen(0);
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
 					Client* c = pState->clients + i;
@@ -69,7 +66,6 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 						p->role = s.roles[i];
 					}
 				}
-
 				break;
 
 			case SERVER_MESSAGE_State:
@@ -150,7 +146,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 				ReadMessage(pState->buffer, l, ClientLeave);
 				Client* c = pState->clients + l.client_id;
 				c->name[0] = 0;
-				if (g_interface.current_screen == SCREEN_Game)
+				if (g_state.game_started)
 				{
 					Player* p = g_state.players.items[l.client_id];
 					RemoveEntity(&g_state.entities, p);
@@ -169,14 +165,14 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			SocketSend(&pState->send_socket, pState->server_ip, pState->buffer, size);
 		}
 
-		if (g_interface.current_screen == SCREEN_Game)
+		if (g_state.game_started)
 		{
 			Client* c = pState->clients + pState->client_id;
 			c->time_since_last_packet += pDeltaTime;
 			if (c->time_since_last_packet > CLIENT_TIMEOUT)
 			{
 				DisplayErrorMessage("Unable to reach host", ERROR_TYPE_Warning);
-				TransitionScreen(&g_state, &g_interface, SCREEN_MainMenu);
+				EndScreen(0.0F);
 				g_state.physics.bodies.clear();
 			}
 		}

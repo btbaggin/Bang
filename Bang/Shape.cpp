@@ -119,7 +119,7 @@ void Set(Shape* pShape, v2* vertices, u32 count)
 static v2 GetSupport(Shape* pShape, v2 dir)
 {
 	float bestProjection = -FLT_MAX;
-	v2 bestVertex;
+	v2 bestVertex = {};
 
 	for (u32 i = 0; i < pShape->vertex_count; ++i)
 	{

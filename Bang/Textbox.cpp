@@ -6,21 +6,8 @@
 #include <ctype.h>  // isspace
 #include <WinUser.h>
 
-#define STB_TEXTEDIT_CHARTYPE   char
-#define STB_TEXTEDIT_STRING     Textbox
 
-// get the base type
-#include "stb/stb_textedit.h"
 
-struct Textbox : public UiElement
-{
-	char *string;
-	int stringlen;
-	FONTS font;
-	float width;
-	float font_x;
-	STB_TexteditState state;
-};
 
 
 // define the functions we need

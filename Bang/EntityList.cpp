@@ -9,7 +9,7 @@ static EntityList GetEntityList(MemoryStack* pStack)
 }
 
 //https://stackoverflow.com/questions/222557/what-uses-are-there-for-placement-new
-#define CreateEntity(list, struct_type) (struct_type*)AddEntity(list, new(PushStruct(g_state.world_arena, struct_type)) struct_type, ENTITY_TYPE_##struct_type##);
+#define CreateEntity(list, struct_type) (struct_type*)AddEntity(list, PushClass(g_state.world_arena, struct_type), ENTITY_TYPE_##struct_type##);
 static Entity* AddEntity(EntityList* pList, Entity* pEntity, ENTITY_TYPES pType)
 {
 	u32 index = pList->free_indices.Request();

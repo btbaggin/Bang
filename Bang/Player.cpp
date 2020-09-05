@@ -42,7 +42,7 @@ static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, 
 	for (u32 i = 0; i < count; i++)
 	{
 		Player* p = (Player*)entities[i];
-		if (p != pPlayer && p->team == pTeam && !TimerIsStarted(&p->invuln_timer))
+		if (p != pPlayer && p->team == pTeam)
 		{
 			return p;
 		}
@@ -59,14 +59,16 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	p->state.team_attack_choice = ATTACK_ON_CD;
 	p->death_message_sent = false;
 
-	//ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
-	//options->color = V3(1);
-	//options->direction = V2(0);
-	//options->life_min = 0.5F; options->life_max = 1.0F;
-	//options->size_min = 10; options->size_max = 32;
-	//options->speed_min = 1; options->speed_max = 5;
-	//options->spread = 0;
-	//p.dust = SpawnParticleSystem(3, 5, BITMAP_MainMenu1, options);
+#ifndef _SERVER
+	ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
+	options->color = V3(1);
+	options->direction = V2(0);
+	options->life_min = 0.5F; options->life_max = 1.0F;
+	options->size_min = 10; options->size_max = 32;
+	options->speed_min = 1; options->speed_max = 5;
+	options->spread = 0;
+	p->dust = SpawnParticleSystem(3, 5, BITMAP_MainMenu1, options);
+#endif
 
 	u32 health = GetSetting(&g_state.config, "player_health")->i;
 	p->local_state = {};
@@ -170,7 +172,7 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 			state.team_attack_choice = ATTACK_PENDING;
 
 	#ifndef _SERVER
-			GameScreen* game = (GameScreen*)g_interface.current_screen_data;
+			GameScreen* game = (GameScreen*)g_interface.current_screen;
 			u32 num[PLAYER_TEAM_COUNT];
 			GenerateRandomNumbersWithNoDuplicates(num, PLAYER_TEAM_COUNT);
 			game->attack_choices[0] = (PLAYER_TEAMS)num[0];
@@ -178,10 +180,9 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	#endif
 		}
 
-		//pEntity->dust.position = pEntity->entity->position;
-		//UpdateParticleSystem(&pEntity->dust, pDeltaTime, nullptr);
-
 	#ifndef _SERVER
+		dust.position = position;
+		UpdateParticleSystem(&dust, pDeltaTime, nullptr);
 		if (!IsZero(velocity))
 		{
 			ResumeLoopSound(walking);
@@ -269,6 +270,6 @@ void Player::Render(RenderState* pState)
 	}
 
 	//SetZLayer(pState, Z_LAYER_Ui);
-	//PushParticleSystem(pState, &pEntity->dust);
+	PushParticleSystem(pState, &dust);
 #endif
 }

@@ -170,7 +170,7 @@ int main()
 
 		TemporaryMemoryHandle h = BeginTemporaryMemory(g_transstate.trans_arena);
 
-		if (g_net.game_started)
+		if (g_state.game_started)
 		{
 			if (TickTimer(&beer, gametime.delta_time))
 			{
@@ -205,7 +205,7 @@ int main()
 
 				u8 slot = INT8_MAX;
 				char name[NAME_LENGTH];
-				if (!g_net.game_started)
+				if (!g_state.game_started)
 				{
 					ReadMessage(g_net.buffer, join, Join);
 					strcpy(name, join.name);
@@ -266,7 +266,7 @@ int main()
 				ReadMessage(g_net.buffer, l, ClientLeave);
 				ResetClient(client);
 
-				if (g_net.game_started)
+				if (g_state.game_started)
 				{
 					Player* p = g_state.players.items[l.client_id];
 					RemoveEntity(&g_state.entities, p);
@@ -281,7 +281,7 @@ int main()
 			case CLIENT_MESSAGE_GameStart:
 			{
 				LogInfo("Received game start message from %d (%s)", client_id, from_ip);
-				g_net.game_started = true;
+				g_state.game_started = true;
 				u32 t = (u32)time(NULL);
 				srand(t);
 
@@ -361,7 +361,7 @@ int main()
 						m.winner = winner;
 						u32 size = WriteMessage(g_net.buffer, &m, GameOverMessage, SERVER_MESSAGE_GameOver);
 						SendMessageToAllConnectedClients(&g_net, size);
-						g_net.game_started = false;
+						g_state.game_started = false;
 					}
 					else
 					{
@@ -417,14 +417,14 @@ int main()
 			}
 		}
 
-		if (g_net.game_started)
+		if (g_state.game_started)
 		{
 			SendCurrentGameState(&g_net, &g_state);
 
 			if (!client_connected)
 			{
 				LogInfo("Ending game because no players are connected");
-				g_net.game_started = false;
+				g_state.game_started = false;
 				ClearEntityList(&g_state.entities);
 				g_state.physics.bodies.clear();
 			}

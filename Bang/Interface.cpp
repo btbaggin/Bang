@@ -1,22 +1,24 @@
 #include "Textbox.cpp"
 #include "Button.cpp"
 
-struct MainMenuScreen
+static void LoadNextScreen()
 {
-	s16 menu_index;
-	ParalaxBitmap backgound;
-};
+	EndTemporaryMemory(g_state.screen_reset);
+	ClearEntityList(&g_state.entities);
+	g_transstate.available_sounds.Clear();
 
-struct LobbyScreen
+	g_interface.current_screen = g_interface.current_screen->CreateNextScreen(g_state.world_arena);
+	g_interface.current_screen->Load(&g_state);
+}
+static void EndScreen(float pTransition)
 {
-	Button start_button;
-};
-
-struct GameScreen
+	g_interface.transition_time = pTransition;
+	if (pTransition <= 0) LoadNextScreen();
+}
+static inline bool IsTransitioning()
 {
-	PLAYER_TEAMS attack_choices[2];
-	float intro_screen;
-};
+	return g_interface.transition_time > 0;
+}
 
 static float GetModalSize(MODAL_SIZES pSize)
 {
@@ -38,7 +40,7 @@ static float GetModalSize(MODAL_SIZES pSize)
 static void UpdateElementGroup(ElementGroup* pGroup)
 {
 	//Cycle focus around all elements in the group
-	if (IsKeyPressed(KEY_Tab))
+	if (IsKeyPressedWithoutDelay(KEY_Tab))
 	{
 		s32 focus_index = -1;
 		for (u32 i = 0; i < pGroup->elements.count; i++)
@@ -77,36 +79,7 @@ static void DisplayModalWindow(Interface* pState, ModalWindowContent* pContent, 
 
 #include "ErrorModal.cpp"
 #include "GameStartModal.cpp"
-#include "MainMenu.cpp"
-#include "Lobby.cpp"
-#include "GameScreen.cpp"
-static void TransitionScreen(GameState* pState, Interface* pInterface, GAME_SCREENS pLevel)
-{
-	EndTemporaryMemory(pState->screen_reset);
-	ClearEntityList(&pState->entities);
-	g_transstate.available_sounds.Clear();
-
-	pInterface->current_screen = pLevel;
-
-	switch (pInterface->current_screen)
-	{
-	case SCREEN_Game:
-		pInterface->current_screen_data = PushZerodStruct(pState->world_arena, GameScreen);
-		LoadGame(pState, (GameScreen*)pInterface->current_screen_data);
-		break;
-
-	case SCREEN_MainMenu:
-		pInterface->current_screen_data = PushZerodStruct(pState->world_arena, MainMenuScreen);
-		LoadMainMenu(pState, (MainMenuScreen*)pInterface->current_screen_data);
-		break;
-
-	case SCREEN_Lobby:
-		pInterface->current_screen_data = PushZerodStruct(pState->world_arena, LobbyScreen);
-		LoadLobby(pState, (LobbyScreen*)pInterface->current_screen_data);
-		break;
-	}
-}
-
+#include "Screen.cpp"
 static void RenderModalWindow(RenderState* pState, Interface* pInterface)
 {
 	ModalWindow* window = &pInterface->modal[pInterface->modal_index];
@@ -143,20 +116,7 @@ static void UpdateInterface(GameState* pState, Interface* pInterface, float pDel
 	}
 	else
 	{
-		switch (pInterface->current_screen)
-		{
-		case SCREEN_MainMenu:
-			UpdateMainMenu(pState, pInterface, pDeltaTime);
-			break;
-
-		case SCREEN_Lobby:
-			UpdateLobby(pState, pInterface, pDeltaTime);
-			break;
-
-		case SCREEN_Game:
-			UpdateGameInterface(pState, pInterface, pDeltaTime);
-			break;
-		}
+		pInterface->current_screen->UpdateInterface(pState, pInterface, pDeltaTime);
 	}
 }
 
@@ -170,24 +130,10 @@ static void RenderInterface(GameState* pState, Interface* pInterface, RenderStat
 	glDisable(GL_DEPTH_TEST);
 
 	SetZLayer(pRender, Z_LAYER_Ui);
-	switch (pInterface->current_screen)
-	{
-	case SCREEN_MainMenu:
-		RenderMainMenu(pState, pInterface, pRender);
-		break;
-
-	case SCREEN_Lobby:
-		RenderLobby(pState, pInterface, pRender);
-		break;
-
-	case SCREEN_Game:
-		RenderGameInterface(pState, pInterface, pRender);
-		break;
-	}
+	pInterface->current_screen->RenderInterface(pRender, pState);
 
 	if (pInterface->modal_index >= 0) RenderModalWindow(pRender, pInterface);
 
 	EndRenderPass(size, pRender);
 	glEnable(GL_DEPTH_TEST);
 }
-

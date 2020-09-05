@@ -33,6 +33,7 @@ static void* PushAndZeroSize(MemoryStack* pStack, u64 pSize)
 
 #define PushStruct(pStack, pType) (pType*)PushSize(pStack, sizeof(pType))
 #define PushZerodStruct(pStack, pType)(pType*)PushAndZeroSize(pStack, sizeof(pType))
+#define PushClass(pStack, pType) new(PushStruct(pStack, pType)) pType
 #define PushArray(pStack, pType, pCount) (pType*)PushSize(pStack, sizeof(pType) * pCount)
 #define PushZerodArray(pStack, pType, pCount) (pType*)PushAndZeroSize(pStack, sizeof(pType) * pCount)
 

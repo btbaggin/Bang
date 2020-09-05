@@ -98,6 +98,7 @@ struct GameState
 	ConfigFile config;
 
 	bool is_running;
+	bool game_started;
 };
 
 struct Assets;

@@ -15,7 +15,7 @@ void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 	//if(!sound) sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F);
 	Entity* entities[MAX_PLAYERS];
 	u32 count;
-	FindEntitiesWithinRange(&pState->entities, position, 128, entities, &count, ENTITY_TYPE_Player);
+	FindEntitiesWithinRange(&pState->entities, position, 64, entities, &count, ENTITY_TYPE_Player);
 
 	for (u32 i = 0; i < count; i++)
 	{

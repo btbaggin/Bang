@@ -105,19 +105,10 @@
       <Filter>Physics</Filter>
     </ClCompile>
     <ClCompile Include="Win32Server.cpp" />
-    <ClCompile Include="GameScreen.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Level.cpp">
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Win32Common.cpp" />
-    <ClCompile Include="MainMenu.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Lobby.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Player.cpp">
       <Filter>Entities</Filter>
     </ClCompile>
@@ -156,6 +147,9 @@
     </ClCompile>
     <ClCompile Include="Arrows.cpp">
       <Filter>Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

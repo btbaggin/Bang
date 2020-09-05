@@ -101,7 +101,6 @@ struct GameNetState
 
 #ifdef _SERVER
 	PlatformSocket listen_socket;
-	bool game_started;
 #else
 	u8 client_id;
 	IPEndpoint server_ip;
