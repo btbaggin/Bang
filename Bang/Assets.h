@@ -91,15 +91,17 @@ struct Sound
 	List<s16> samples;
 };
 
+struct Entity;
 struct PlayingSound
 {
 	float volume;
 	SOUNDS sound;
 	Sound* loaded_sound;
 	u32 samples_played;
-	PlayingSound* next;
-
+	Entity* entity;
 	SOUND_STATUS status;
+
+	PlayingSound* next;
 };
 
 

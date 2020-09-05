@@ -67,13 +67,14 @@ static PlayingSound* GetAvailablePlayingSound()
 	return p;
 }
 
-static PlayingSound* PlaySound(Assets* pAssets, SOUNDS pSound, float pVolume = 1.0F)
+static PlayingSound* PlaySound(Assets* pAssets, SOUNDS pSound, float pVolume = 1.0F, Entity* pEntity = nullptr)
 {
 	PlayingSound* p = GetAvailablePlayingSound();
 	Sound* sound = GetSound(pAssets, pSound);
 	if (!sound) p->sound = pSound;
 	p->loaded_sound = sound;
 
+	p->entity = pEntity;
 	p->samples_played = 0;
 	p->status = SOUND_STATUS_Play;
 	p->volume = pow(pVolume, 2.0F); //Logarithmic volume scaling
@@ -84,13 +85,14 @@ static PlayingSound* PlaySound(Assets* pAssets, SOUNDS pSound, float pVolume = 1
 	return p;
 }
 
-static PlayingSound* LoopSound(Assets* pAssets, SOUNDS pSound, float pVolume = 1.0F)
+static PlayingSound* LoopSound(Assets* pAssets, SOUNDS pSound, float pVolume = 1.0F, Entity* pEntity = nullptr)
 {
 	PlayingSound* p = GetAvailablePlayingSound();
 	Sound* sound = GetSound(pAssets, pSound);
 	if (!sound) p->sound = pSound;
 	p->loaded_sound = sound;
 
+	p->entity = pEntity;
 	p->samples_played = 0;
 	p->status = SOUND_STATUS_Loop;
 	p->volume = pow(pVolume, 2.0F); //Logarithmic volume scaling
@@ -157,11 +159,25 @@ static void GameGetSoundSamples(GameState* pState, GameTransState* pTransState, 
 				u32 samples_remaining = sound->samples.count - current->samples_played;
 				if (samples > samples_remaining) samples = samples_remaining;
 
+				//If the sound came from an entity, calculate the sound based on distance from that entity
+				float mod = 1.0F;
+				if (current->entity)
+				{
+					//https://medium.com/@kfarr/understanding-web-audio-api-positional-audio-distance-models-for-webxr-e77998afcdff
+					//sound will be full volume up to 1/4 of the screen away
+					float refDistance = g_state.form->height / 4;
+					const float ROLL_OFF_FACTOR = 1;
+					v2 camera_mid = g_state.camera.position + V2(g_state.form->width / 2, g_state.form->height / 2);
+					float distance = HMM_Length(camera_mid - current->entity->position);
+
+					mod = refDistance / (refDistance + ROLL_OFF_FACTOR * (max(distance, refDistance) - refDistance));
+				}
+
 				for (u32 i = 0; i < samples; i++)
 				{
 					float sample = (float)sound->samples.items[current->samples_played + i];
-					*channel0++ += current->volume * sample;
-					*channel1++ += current->volume * sample;
+					*channel0++ += current->volume * sample * mod;
+					*channel1++ += current->volume * sample * mod;
 				}
 
 				current->samples_played += samples;

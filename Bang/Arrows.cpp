@@ -2,9 +2,9 @@ static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 {
 	Arrows* b = CreateEntity(&pState->entities, Arrows);
 #ifndef _SERVER
-	b->sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F);
+	b->sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F, b);
 #endif
-	b->life = 20;
+	b->life = GetSetting(&pState->config, "arrow_duration")->f;
 	b->position = pEvent->position;
 
 	return b;
@@ -12,10 +12,11 @@ static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 
 void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 {
-	//if(!sound) sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F);
+	float range = GetSetting(&pState->config, "arrow_radius")->f;
+
 	Entity* entities[MAX_PLAYERS];
 	u32 count;
-	FindEntitiesWithinRange(&pState->entities, position, 64, entities, &count, ENTITY_TYPE_Player);
+	FindEntitiesWithinRange(&pState->entities, position, range / 2, entities, &count, ENTITY_TYPE_Player);
 
 	for (u32 i = 0; i < count; i++)
 	{
@@ -36,6 +37,7 @@ void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 void Arrows::Render(RenderState* pState)
 {
 #ifndef _SERVER
-	PushSizedQuad(pState, position - V2(64), V2(128), V4(1, 0, 0, 0.5F));
+	float range = GetSetting(&g_state.config, "arrow_radius")->f;
+	PushSizedQuad(pState, position - V2(range / 2), V2(range), V4(1, 0, 0, 0.5F));
 #endif
 }

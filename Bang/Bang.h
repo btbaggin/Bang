@@ -80,7 +80,6 @@ struct GameState
 	EntityList entities;
 
 	StaticList<Player*, MAX_PLAYERS> players;
-	//StaticList<Beer, 3> beers;
 
 	PhysicsScene physics;
 	Camera camera;

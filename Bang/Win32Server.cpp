@@ -42,6 +42,8 @@ struct win32_thread_info
 GameNetState g_net = {};
 GameState g_state = {};
 GameTransState g_transstate = {};
+Timer beer_timer;
+Timer arrow_timer;
 
 #include "Win32Common.cpp"
 #include "Memory.cpp"
@@ -116,7 +118,6 @@ static bool EvaluateWinCondition(GameState* pState, PLAYER_ROLES* pWinner)
 	return false;
 }
 
-Timer beer(5.0F);
 int main()
 {
 	PlatformWorkQueue work_queue = {};
@@ -158,6 +159,9 @@ int main()
 
 	LogInfo("Server started on port %d", PORT);
 
+	ResetTimer(&beer_timer, GetSetting(&g_state.config, "beer_spawn_time")->f);
+	ResetTimer(&arrow_timer, GetSetting(&g_state.config, "arrow_spawn_time")->f);
+
 	//Game loop
 	g_state.is_running = true;
 	while (g_state.is_running)
@@ -172,14 +176,16 @@ int main()
 
 		if (g_state.game_started)
 		{
-			if (TickTimer(&beer, gametime.delta_time))
+			if (TickTimer(&beer_timer, gametime.delta_time))
 			{
 				SpawnBeerEvent* e = PushGameEvent(&g_state.events, SpawnBeerEvent, GAME_EVENT_SpawnBeer);
 				e->position = V2(Random(0.0F, (float)g_state.map->width), Random(0.0F, (float)g_state.map->height));
-				StopTimer(&beer);
+			}
 
-				ArrowsEvent* e2 = PushGameEvent(&g_state.events, ArrowsEvent, GAME_EVENT_Arrows);
-				e2->position = V2(Random(0.0F, (float)g_state.map->width), Random(0.0F, (float)g_state.map->height));
+			if (TickTimer(&arrow_timer, gametime.delta_time))
+			{
+				ArrowsEvent* e = PushGameEvent(&g_state.events, ArrowsEvent, GAME_EVENT_Arrows);
+				e->position = V2(Random(0.0F, (float)g_state.map->width), Random(0.0F, (float)g_state.map->height));
 			}
 		}
 		
