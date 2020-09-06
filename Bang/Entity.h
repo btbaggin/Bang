@@ -63,7 +63,6 @@ struct EntityList
 
 struct ParticleCreationOptions
 {
-	v3 color;
 	float life_min;
 	float life_max;
 	float size_min;
@@ -72,13 +71,14 @@ struct ParticleCreationOptions
 	float spread;
 	float speed_min;
 	float speed_max;
+	u8 r, g, b, a;
 };
 
 
 struct Particle
 {
 	v2 velocity;
-	v3 color;
+	u8 r, g, b, a;
 	v2 position;
 	float size;
 	float life;

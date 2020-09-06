@@ -51,6 +51,13 @@ static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, 
 	return nullptr;
 }
 
+void UpdateDustParticles(Particle* pParticle, float pDeltaTime)
+{
+	pParticle->size -= pDeltaTime * 2;
+	if (pParticle->size <= 0) pParticle->size = 0;
+	pParticle->a -= 10;
+}
+
 static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 {
 	Player* p = CreateEntity(&pState->entities, Player);
@@ -61,13 +68,13 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 
 #ifndef _SERVER
 	ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
-	options->color = V3(1);
+	options->r = 255; options->g = 255; options->b = 255; options->a = 255;
 	options->direction = V2(0);
-	options->life_min = 0.5F; options->life_max = 1.0F;
-	options->size_min = 10; options->size_max = 32;
+	options->life_min = 0.25F; options->life_max = 0.5F;
+	options->size_min = 24; options->size_max = 48;
 	options->speed_min = 1; options->speed_max = 5;
-	options->spread = 0;
-	p->dust = SpawnParticleSystem(3, 5, BITMAP_MainMenu1, options);
+	options->spread = 5;
+	p->dust = SpawnParticleSystem(5, 10, BITMAP_Dust, options);
 #endif
 
 	u32 health = GetSetting(&g_state.config, "player_health")->i;
@@ -139,6 +146,7 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 				Player* attackee = FindPlayersWithinAttackRange(pState, this, (PLAYER_TEAMS)state.team_attack_choice);
 				if (attackee)
 				{
+					PlaySound(g_transstate.assets, SOUND_Sword, 1.0F, this);
 					DamagePlayer(attackee);
 					attacking = true;
 					state.team_attack_choice = ATTACK_ON_CD;
@@ -180,17 +188,11 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	#endif
 		}
 
+		dust.position = position + V2(flip ? PLAYER_SIZE : 0, 64);
+		UpdateParticleSystem(&dust, pDeltaTime, UpdateDustParticles, !IsZero(velocity));
 	#ifndef _SERVER
-		dust.position = position;
-		UpdateParticleSystem(&dust, pDeltaTime, nullptr);
-		if (!IsZero(velocity))
-		{
-			ResumeLoopSound(walking);
-		}
-		else
-		{
-			PauseSound(walking);
-		}
+		if (!IsZero(velocity)) ResumeLoopSound(walking);
+		else PauseSound(walking);
 	#endif
 
 		//Invulnerability after being attacked

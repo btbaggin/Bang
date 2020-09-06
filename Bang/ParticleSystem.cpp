@@ -10,10 +10,10 @@ static ParticleSystem SpawnParticleSystem(u32 pCount, u32 pPerSecond, BITMAPS pB
 	sys.texture = pBitmap;
 
 	static const GLfloat g_vertex_buffer_data[] = {
-		 -0.5f, -0.5f, 10.0f,
-		  0.5f, -0.5f, 10.0f,
-		 -0.5f,  0.5f, 10.0f,
-		  0.5f,  0.5f, 10.0f,
+	 -0.5f, -0.5f, 10.0f,
+	 -0.5f,  0.5f, 10.0f,
+	  0.5f, -0.5f, 10.0f,
+	  0.5f,  0.5f, 10.0f,
 	};
 	glGenVertexArrays(1, &sys.VAO);
 	glBindVertexArray(sys.VAO);
@@ -86,7 +86,10 @@ static Particle* FindUnusedParticle(ParticleSystem* pSystem)
 static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreationOptions* pOptions)
 {
 	pParticle->position = pPosition;
-	pParticle->color = pOptions->color;
+	pParticle->r = pOptions->r;
+	pParticle->g = pOptions->g;
+	pParticle->b = pOptions->b;
+	pParticle->a = pOptions->a;
 	pParticle->size = Random(pOptions->size_min, pOptions->size_max);
 	pParticle->life = Random(pOptions->life_min, pOptions->life_max);
 
@@ -110,14 +113,17 @@ static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreati
 	pParticle->velocity = (pOptions->direction + random_direction) * Random(pOptions->speed_min, pOptions->speed_max);
 }
 
-static void UpdateParticleSystem(ParticleSystem* pSystem, float pDeltaTime, ParticleUpdate* pUpdate)
+static void UpdateParticleSystem(ParticleSystem* pSystem, float pDeltaTime, ParticleUpdate* pUpdate, bool pAllowNewParticles = true)
 {
-	pSystem->particle_time += pDeltaTime;
-	while (pSystem->particle_time >= pSystem->time_per_particle)
+	if (pAllowNewParticles)
 	{
-		Particle* p = FindUnusedParticle(pSystem);
-		InitializeParticle(p, pSystem->position, pSystem->creation);
-		pSystem->particle_time -= pSystem->time_per_particle;
+		pSystem->particle_time += pDeltaTime;
+		while (pSystem->particle_time >= pSystem->time_per_particle)
+		{
+			Particle* p = FindUnusedParticle(pSystem);
+			InitializeParticle(p, pSystem->position, pSystem->creation);
+			pSystem->particle_time -= pSystem->time_per_particle;
+		}
 	}
 
 	float* positions = PushArray(g_transstate.trans_arena, float, pSystem->particle_count * 4);
@@ -131,25 +137,25 @@ static void UpdateParticleSystem(ParticleSystem* pSystem, float pDeltaTime, Part
 		{
 			if(pUpdate) pUpdate(p, pDeltaTime);
 
-			//p->camera_distance = HMM_LengthSquared(p->position - g_state->camera.position);
+			p->camera_distance = HMM_LengthSquared(p->position - g_state.camera.position);
 
 			*(positions + (4 * count + 0)) = p->position.X;
 			*(positions + (4 * count + 1)) = p->position.Y;
 			*(positions + (4 * count + 2)) = g_transstate.render_state->z_index;
 			*(positions + (4 * count + 3)) = p->size;
 
-			*(colors + (4 * count + 0)) = (u8)(p->color.R * 255);
-			*(colors + (4 * count + 1)) = (u8)(p->color.G * 255);
-			*(colors + (4 * count + 2)) = (u8)(p->color.B * 255);
-			*(colors + (4 * count + 3)) = (u8)(1 * 255);
+			*(colors + (4 * count + 0)) = p->r;
+			*(colors + (4 * count + 1)) = p->g;
+			*(colors + (4 * count + 2)) = p->b;
+			*(colors + (4 * count + 3)) = p->a;
 			count++;
 		}
 		else
 		{
-			//p->camera_distance = -1.0F;
+			p->camera_distance = -1.0F;
 		}
 	}
-	//std::sort(pSystem->particles, pSystem->particles + pSystem->particle_count);
+	std::sort(pSystem->particles, pSystem->particles + pSystem->particle_count);
 	pSystem->alive_particle_count = count;
 
 	glBindVertexArray(pSystem->VAO);

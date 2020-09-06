@@ -43,6 +43,7 @@ enum BITMAPS : u8
 	BITMAP_Target,
 	BITMAP_Shadow,
 	BITMAP_Beer,
+	BITMAP_Dust,
 	BITMAP_TexturePack,
 
 	BITMAP_COUNT
@@ -62,6 +63,8 @@ enum SOUNDS : u8
 	SOUND_Beep,
 	SOUND_Walking,
 	SOUND_Arrows,
+	SOUND_Background,
+	SOUND_Sword,
 	SOUND_COUNT
 };
 

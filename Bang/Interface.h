@@ -137,6 +137,8 @@ struct GameScreen : Screen
 {
 	float intro_screen = 3.0F;
 	PLAYER_TEAMS attack_choices[2];
+	PlayingSound* sound;
+
 	void Load(GameState* pState);
 
 	void Update(GameState* pState, float pDeltaTime, u32 pPredictionId);

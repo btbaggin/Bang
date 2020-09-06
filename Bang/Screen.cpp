@@ -153,6 +153,8 @@ void GameScreen::Load(GameState* pState)
 	pState->game_started = true;
 	pState->map = PushStruct(pState->world_arena, TiledMap);
 	LoadTiledMap(pState->map, "..\\..\\Resources\\level.json", g_transstate.trans_arena);
+
+	sound = LoopSound(g_transstate.assets, SOUND_Background, 0.5F);
 }
 
 void GameScreen::Update(GameState* pState, float pDeltaTime, u32 pPredictionId)
@@ -167,34 +169,37 @@ void GameScreen::Update(GameState* pState, float pDeltaTime, u32 pPredictionId)
 	Client* c = g_net.clients + g_net.client_id;
 	Player* p = g_state.players.items[g_net.client_id];
 
-	ClientInput i = {};
-	i.attack_choice = p->state.team_attack_choice;
-	i.client_id = g_net.client_id;
-	i.prediction_id = pPredictionId;
-	i.dt = pDeltaTime;
-	i.flags = flags;
-	u32 size = WriteMessage(g_net.buffer, &i, ClientInput, CLIENT_MESSAGE_Input);
-	SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
-
-	p->Update(pState, pDeltaTime, flags);
-	for (u32 i = 0; i < pState->entities.end_index; i++)
+	if (IsEntityValid(&pState->entities, p))
 	{
-		Entity* e = pState->entities.entities[i];
-		if (IsEntityValid(&pState->entities, e) && e->type != ENTITY_TYPE_Player)
+		ClientInput i = {};
+		i.attack_choice = p->state.team_attack_choice;
+		i.client_id = g_net.client_id;
+		i.prediction_id = pPredictionId;
+		i.dt = pDeltaTime;
+		i.flags = flags;
+		u32 size = WriteMessage(g_net.buffer, &i, ClientInput, CLIENT_MESSAGE_Input);
+		SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
+
+		p->Update(pState, pDeltaTime, flags);
+		for (u32 i = 0; i < pState->entities.end_index; i++)
 		{
-			e->Update(pState, pDeltaTime, 0);
+			Entity* e = pState->entities.entities[i];
+			if (IsEntityValid(&pState->entities, e) && e->type != ENTITY_TYPE_Player)
+			{
+				e->Update(pState, pDeltaTime, 0);
+			}
 		}
+
+
+		u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
+		PredictedMove* move = &g_net.moves[index];
+		PredictedMoveResult* result = &g_net.results[index];
+
+		move->dt = pDeltaTime;
+		move->input = flags;
+		result->position = p->position;
+		result->state = p->local_state;
 	}
-
-
-	u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
-	PredictedMove* move = &g_net.moves[index];
-	PredictedMoveResult* result = &g_net.results[index];
-
-	move->dt = pDeltaTime;
-	move->input = flags;
-	result->position = p->position;
-	result->state = p->local_state;
 }
 void GameScreen::Render(RenderState* pRender, GameState* pState)
 {

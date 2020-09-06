@@ -87,7 +87,7 @@ static void InitializeRenderer(RenderState* pState)
 	pState->particle_program = CreateProgram(v_shader, f_shader);
 
 	glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+	glCullFace(GL_BACK);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
@@ -468,7 +468,7 @@ static void PushParticleSystem(RenderState* pState, ParticleSystem* pSystem)
 	m->PBO = pSystem->PBO;
 	m->VAO = pSystem->VAO;
 	m->VBO = pSystem->VBO;
-	m->particle_count = pSystem->particle_count;
+	m->particle_count = pSystem->alive_particle_count;
 
 	Bitmap* bitmap = GetBitmap(g_transstate.assets, pSystem->texture);
 	if (bitmap) m->texture = bitmap->texture;

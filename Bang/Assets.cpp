@@ -164,6 +164,8 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	AddSoundAsset(assets, SOUND_Beep, "..\\..\\Resources\\beep.wav");
 	AddSoundAsset(assets, SOUND_Walking, "..\\..\\Resources\\walking.wav");
 	AddSoundAsset(assets, SOUND_Arrows, "..\\..\\Resources\\arrows.wav");
+	AddSoundAsset(assets, SOUND_Background, "..\\..\\Resources\\background.wav");
+	AddSoundAsset(assets, SOUND_Sword, "..\\..\\Resources\\sword.wav");
 	//AddBitmapAsset(assets, BITMAP_Background, ".\\Assets\\background.jpg");
 	//AddBitmapAsset(assets, BITMAP_Placeholder, ".\\Assets\\placeholder.jpg");
 
@@ -174,9 +176,10 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	AddBitmapAsset(assets, BITMAP_MainMenu5, "..\\..\\Resources\\Main Menu\\5.png");
 	AddBitmapAsset(assets, BITMAP_Title, "..\\..\\Resources\\title.png");
 	AddBitmapAsset(assets, BITMAP_Character, "..\\..\\Resources\\character.png");
-	AddBitmapAsset(assets, BITMAP_Target, "..\\..\\Resources\\renegade.png");
+	AddBitmapAsset(assets, BITMAP_Target, "..\\..\\Resources\\target.png");
 	AddBitmapAsset(assets, BITMAP_Shadow, "..\\..\\Resources\\shadow.png");
 	AddBitmapAsset(assets, BITMAP_Beer, "..\\..\\Resources\\beer.png");
+	AddBitmapAsset(assets, BITMAP_Dust, "..\\..\\Resources\\dust.png");
 	/*PackedTexture* text = new PackedTexture();
 	text->textures[0] = { BITMAP_Error, "error.png" };
 	text->textures[1] = { BITMAP_Question, "question.png" };
