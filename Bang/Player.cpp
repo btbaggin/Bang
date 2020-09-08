@@ -9,7 +9,6 @@ enum PLAYER_ANIMATIONS : u8
 };
 
 const float ATTACK_TIME = 1.0f;
-const u32 PLAYER_SIZE = 48;
 static void SetAnimation(AnimatedBitmap* pBitmap, u32 pAnimation, float pDuration)
 {
 	if (pBitmap->current_animation != pAnimation)
@@ -70,10 +69,10 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
 	options->r = 255; options->g = 255; options->b = 255; options->a = 255;
 	options->direction = V2(0);
-	options->life_min = 0.25F; options->life_max = 0.5F;
-	options->size_min = 24; options->size_max = 48;
-	options->speed_min = 1; options->speed_max = 5;
-	options->spread = 5;
+	options->life = { 0.25F, 0.5F };
+	options->size = { pState->map->tile_size.Width * 0.5F, pState->map->tile_size.Width * 0.5F };
+	options->speed = { 1, 5 };
+	options->spawn_radius = 5;
 	p->dust = SpawnParticleSystem(5, 10, BITMAP_Dust, options);
 #endif
 
@@ -85,9 +84,9 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	RigidBodyCreationOptions o;
 	o.density = 1.0F;
 	o.type = SHAPE_Poly;
-	o.width = PLAYER_SIZE;
-	o.height = 64;
-	o.offset = V2(0, 12);
+	o.width = pState->map->tile_size.Height * 0.8F;;
+	o.height = pState->map->tile_size.Height;
+	o.offset = V2(0, 0);
 	o.entity = p;
 	o.material.dynamic_friction = 0.2F;
 	o.material.static_friction = 0.1F;
@@ -112,7 +111,7 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 {
 	if (state.health > 0)
 	{
-		float speed = GetSetting(&g_state.config, "player_speed")->f;
+		float speed = GetSetting(&g_state.config, "player_speed")->f * pState->map->tile_size.Width;
 
 		bool attacking = false;
 		v2 velocity = {};
@@ -188,9 +187,9 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	#endif
 		}
 
-		dust.position = position + V2(flip ? PLAYER_SIZE : 0, 64);
-		UpdateParticleSystem(&dust, pDeltaTime, UpdateDustParticles, !IsZero(velocity));
 	#ifndef _SERVER
+		dust.position = position + V2(pState->map->tile_size.Width / 2, pState->map->tile_size.Height);
+		UpdateParticleSystem(&dust, pDeltaTime, UpdateDustParticles, !IsZero(velocity));
 		if (!IsZero(velocity)) ResumeLoopSound(walking);
 		else PauseSound(walking);
 	#endif
@@ -202,7 +201,7 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 		{
 			Entity* entities[10];
 			u32 count;
-			FindEntitiesWithinRange(&pState->entities, position, 64.0F, entities, &count, ENTITY_TYPE_Beer);
+			FindEntitiesWithinRange(&pState->entities, position, 32.0F, entities, &count, ENTITY_TYPE_Beer);
 			if (count > 0)
 			{
 				local_state.beers++;
@@ -216,29 +215,28 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	}
 };
 
-
+#ifndef _SERVER
 void Player::Render(RenderState* pState)
 {
-#ifndef _SERVER
 	const float MARGIN = 5.0F;
-	const float HEADER_HEIGHT = 24.0F;
-	const float HEADER_WIDTH = 96.0F;
-	v2 pos = position - V2((HEADER_WIDTH - PLAYER_SIZE) / 2.0F, HEADER_HEIGHT / 2.0F);
+	const float HEADER_HEIGHT = g_state.map->tile_size.Height * 0.66F;
+	const float HEADER_WIDTH = g_state.map->tile_size.Width * 1.5F;
+	v2 pos = position - V2((HEADER_WIDTH - g_state.map->tile_size.Width) / 2.0F, HEADER_HEIGHT);
 
 	v4 color = V4(1);
 	switch (role)
 	{
 	case PLAYER_ROLE_Sheriff:
-		color = V4(1, 1, 0, 1);
+		color = GetSetting(&g_state.config, "sheriff_color")->V4;
 		break;
 	case PLAYER_ROLE_Outlaw:
-		color = V4(0.3F, 0.3F, 0.3F, 1);
+		color = GetSetting(&g_state.config, "outlaw_color")->V4;
 		break;
 	case PLAYER_ROLE_Renegade:
-		color = V4(1, 0, 0, 1);
+		color = GetSetting(&g_state.config, "renegade_color")->V4;
 		break;
 	case PLAYER_ROLE_Deputy:
-		color = V4(1, 1, 0, 1);
+		color = GetSetting(&g_state.config, "sheriff_color")->V4;
 		break;
 	case PLAYER_ROLE_Unknown:
 		break;
@@ -260,18 +258,18 @@ void Player::Render(RenderState* pState)
 	{
 		//Health bar
 		u32 max_health = GetSetting(&g_state.config, "player_health")->i;
-		PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH, 12), V4(1, 0, 0, 1));
-		PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH * (state.health / (float)max_health), 12), V4(0, 1, 0, 1));
+		PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH, HEADER_HEIGHT * 0.5F), V4(1, 0, 0, 1));
+		PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH * (state.health / (float)max_health), HEADER_HEIGHT * 0.5F), V4(0, 1, 0, 1));
 
 
-		const v2 size = V2(PLAYER_SIZE, 64);
+		const v2 size = V2(g_state.map->tile_size.Width * 0.8F, g_state.map->tile_size.Height);
 		color = team_colors[team];
 		//Player
-		PushSizedQuad(pState, position + V2(0, 35), V2(48, 48), V4(1, 1, 1, 0.5), GetBitmap(g_transstate.assets, BITMAP_Shadow));
+		PushSizedQuad(pState, position + V2(0, g_state.map->tile_size.Height * 0.7F), g_state.map->tile_size * 0.75F, V4(1, 1, 1, 0.5), GetBitmap(g_transstate.assets, BITMAP_Shadow));
 		RenderAnimation(pState, position, size, color, &bitmap);
 	}
 
 	//SetZLayer(pState, Z_LAYER_Ui);
 	PushParticleSystem(pState, &dust);
-#endif
 }
+#endif

@@ -152,60 +152,66 @@ void GameScreen::Load(GameState* pState)
 {
 	pState->game_started = true;
 	pState->map = PushStruct(pState->world_arena, TiledMap);
-	LoadTiledMap(pState->map, "..\\..\\Resources\\level.json", g_transstate.trans_arena);
+	LoadTiledMap(pState->map, "..\\..\\Resources\\level2.json", g_transstate.trans_arena);
 
 	sound = LoopSound(g_transstate.assets, SOUND_Background, 0.5F);
 }
 
 void GameScreen::Update(GameState* pState, float pDeltaTime, u32 pPredictionId)
 {
-	u32 flags = 0;
-	if (IsKeyDown(KEY_Left)) flags |= 1 << INPUT_MoveLeft;
-	if (IsKeyDown(KEY_Right)) flags |= 1 << INPUT_MoveRight;
-	if (IsKeyDown(KEY_Up)) flags |= 1 << INPUT_MoveUp;
-	if (IsKeyDown(KEY_Down)) flags |= 1 << INPUT_MoveDown;
-	if (IsKeyPressed(KEY_Space)) flags |= 1 << INPUT_Shoot;
-
-	Client* c = g_net.clients + g_net.client_id;
-	Player* p = g_state.players.items[g_net.client_id];
-
-	if (IsEntityValid(&pState->entities, p))
+	if (!IsTransitioning())
 	{
-		ClientInput i = {};
-		i.attack_choice = p->state.team_attack_choice;
-		i.client_id = g_net.client_id;
-		i.prediction_id = pPredictionId;
-		i.dt = pDeltaTime;
-		i.flags = flags;
-		u32 size = WriteMessage(g_net.buffer, &i, ClientInput, CLIENT_MESSAGE_Input);
-		SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
+		u32 flags = 0;
+		if (IsKeyDown(KEY_Left)) flags |= 1 << INPUT_MoveLeft;
+		if (IsKeyDown(KEY_Right)) flags |= 1 << INPUT_MoveRight;
+		if (IsKeyDown(KEY_Up)) flags |= 1 << INPUT_MoveUp;
+		if (IsKeyDown(KEY_Down)) flags |= 1 << INPUT_MoveDown;
+		if (IsKeyPressed(KEY_Space)) flags |= 1 << INPUT_Shoot;
 
-		p->Update(pState, pDeltaTime, flags);
-		for (u32 i = 0; i < pState->entities.end_index; i++)
+		Client* c = g_net.clients + g_net.client_id;
+		Player* p = g_state.players.items[g_net.client_id];
+
+		if (IsEntityValid(&pState->entities, p))
 		{
-			Entity* e = pState->entities.entities[i];
-			if (IsEntityValid(&pState->entities, e) && e->type != ENTITY_TYPE_Player)
+			ClientInput i = {};
+			i.attack_choice = p->state.team_attack_choice;
+			i.client_id = g_net.client_id;
+			i.prediction_id = pPredictionId;
+			i.dt = pDeltaTime;
+			i.flags = flags;
+			u32 size = WriteMessage(g_net.buffer, &i, ClientInput, CLIENT_MESSAGE_Input);
+			SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
+
+			p->Update(pState, pDeltaTime, flags);
+			for (u32 i = 0; i < pState->entities.end_index; i++)
 			{
-				e->Update(pState, pDeltaTime, 0);
+				Entity* e = pState->entities.entities[i];
+				if (IsEntityValid(&pState->entities, e) && e->type != ENTITY_TYPE_Player)
+				{
+					e->Update(pState, pDeltaTime, 0);
+				}
 			}
+
+
+			u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
+			PredictedMove* move = &g_net.moves[index];
+			PredictedMoveResult* result = &g_net.results[index];
+
+			move->dt = pDeltaTime;
+			move->input = flags;
+			result->position = p->position;
+			result->state = p->local_state;
 		}
-
-
-		u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
-		PredictedMove* move = &g_net.moves[index];
-		PredictedMoveResult* result = &g_net.results[index];
-
-		move->dt = pDeltaTime;
-		move->input = flags;
-		result->position = p->position;
-		result->state = p->local_state;
 	}
 }
 void GameScreen::Render(RenderState* pRender, GameState* pState)
 {
-	SetZLayer(pRender, Z_LAYER_Background1);
-	UpdateCamera(pState, pState->players.items[g_net.client_id]);
-	PushSizedQuad(pRender, V2(0), V2((float)pState->map->width, (float)pState->map->height), pState->map->bitmap);
+	if (!IsTransitioning())
+	{
+		SetZLayer(pRender, Z_LAYER_Background1);
+		UpdateCamera(pState, pState->players.items[g_net.client_id]);
+		PushSizedQuad(pRender, V2(0), V2((float)pState->map->width, (float)pState->map->height), pState->map->bitmap);
+	}
 }
 
 void GameScreen::UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime)
@@ -220,9 +226,29 @@ void GameScreen::UpdateInterface(GameState* pState, Interface* pInterface, float
 }
 void GameScreen::RenderInterface(RenderState* pRender, GameState* pState)
 {
-	Player* p = pState->players.items[g_net.client_id];
-	if (intro_screen > 0)
+	if (IsTransitioning())
 	{
+		v2 pos = V2(0);
+		PushQuad(pRender, pos, V2(pState->form->width, pState->form->height), V4(0, 0, 0, 1));
+		switch (winner)
+		{
+		case PLAYER_ROLE_Sheriff:
+			PushText(pRender, FONT_Title, "Sheriff and Deputies win!", pos, V4(1));
+			break;
+		case PLAYER_ROLE_Outlaw:
+			PushText(pRender, FONT_Title, "Outlaws win!", pos, V4(1));
+			break;
+		case PLAYER_ROLE_Renegade:
+			PushText(pRender, FONT_Title, "Renegade wins!", pos, V4(1));
+			break;
+		default:
+			assert(false);
+		}
+	}
+	else if (intro_screen > 0)
+	{
+		Player* p = pState->players.items[g_net.client_id];
+		
 		v2 pos = V2(0, pState->form->height - (pState->form->height / 4));
 		PushQuad(pRender, pos, V2(pState->form->width, pState->form->height), V4(0, 0, 0, 0.8F));
 		switch (p->role)
@@ -245,6 +271,7 @@ void GameScreen::RenderInterface(RenderState* pRender, GameState* pState)
 	}
 	else
 	{
+		Player* p = pState->players.items[g_net.client_id];
 		float ms = 0;
 		for (u32 i = 0; i < ArrayCount(g_net.latency_ms); i++)
 		{
