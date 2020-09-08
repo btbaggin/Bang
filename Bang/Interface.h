@@ -138,6 +138,7 @@ struct GameScreen : Screen
 	float intro_screen = 3.0F;
 	PLAYER_TEAMS attack_choices[2];
 	PlayingSound* sound;
+	PLAYER_ROLES winner;
 
 	void Load(GameState* pState);
 
@@ -149,5 +150,3 @@ struct GameScreen : Screen
 
 	Screen* CreateNextScreen(MemoryStack* pStack);
 };
-
-//TODO allocate next screen

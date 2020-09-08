@@ -103,6 +103,10 @@ static inline float Random(float pMin, float pMax)
 {
 	return Random() * (pMax - pMin) + pMin;
 }
+static inline float Random(Range pRange)
+{
+	return Random(pRange.min, pRange.max);
+}
 
 #define Megabytes(size) size * 1024 * 1024
 

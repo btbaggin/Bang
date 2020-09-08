@@ -170,6 +170,7 @@ int main()
 		QueryPerformanceCounter(&i2);
 		__int64 start = i2.QuadPart;
 
+		CheckForConfigUpdates(&g_state.config);
 		Tick(&gametime);
 
 		TemporaryMemoryHandle h = BeginTemporaryMemory(g_transstate.trans_arena);
@@ -292,7 +293,7 @@ int main()
 				srand(t);
 
 				g_state.map = PushStruct(g_state.world_arena, TiledMap);
-				LoadTiledMap(g_state.map, "..\\..\\Resources\\level.json", g_transstate.trans_arena);
+				LoadTiledMap(g_state.map, "..\\..\\Resources\\level2.json", g_transstate.trans_arena);
 
 				//Get number of connected players
 				u32 players = 0;
@@ -363,6 +364,8 @@ int main()
 					PLAYER_ROLES winner;
 					if (EvaluateWinCondition(&g_state, &winner))
 					{
+						LogInfo("Game over, winner is %d. Notifying clients", winner);
+
 						GameOverMessage m;
 						m.winner = winner;
 						u32 size = WriteMessage(g_net.buffer, &m, GameOverMessage, SERVER_MESSAGE_GameOver);

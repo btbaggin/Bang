@@ -180,6 +180,7 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	AddBitmapAsset(assets, BITMAP_Shadow, "..\\..\\Resources\\shadow.png");
 	AddBitmapAsset(assets, BITMAP_Beer, "..\\..\\Resources\\beer.png");
 	AddBitmapAsset(assets, BITMAP_Dust, "..\\..\\Resources\\dust.png");
+	AddBitmapAsset(assets, BITMAP_Arrow, "..\\..\\Resources\\arrow.png");
 	/*PackedTexture* text = new PackedTexture();
 	text->textures[0] = { BITMAP_Error, "error.png" };
 	text->textures[1] = { BITMAP_Question, "question.png" };

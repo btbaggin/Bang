@@ -49,7 +49,9 @@ struct Entity
 	EntityIndex index = {};
 	ENTITY_TYPES type;
 
+#ifndef _SERVER
 	virtual void Render(RenderState* pState) = 0;
+#endif
 	virtual void Update(GameState* pState, float pDeltaTime, u32 pInputFlags) = 0;
 };
 
@@ -63,14 +65,12 @@ struct EntityList
 
 struct ParticleCreationOptions
 {
-	float life_min;
-	float life_max;
-	float size_min;
-	float size_max;
+	Range life;
+	Range size;
 	v2 direction;
 	float spread;
-	float speed_min;
-	float speed_max;
+	float spawn_radius;
+	Range speed;
 	u8 r, g, b, a;
 };
 
@@ -154,6 +154,7 @@ struct Beer : public Entity
 struct Arrows : public Entity
 {
 	PlayingSound* sound;
+	ParticleSystem system;
 	float life;
 	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
 	void Render(RenderState* pState);

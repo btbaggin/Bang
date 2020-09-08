@@ -44,7 +44,7 @@ enum BITMAPS : u8
 	BITMAP_Shadow,
 	BITMAP_Beer,
 	BITMAP_Dust,
-	BITMAP_TexturePack,
+	BITMAP_Arrow,
 
 	BITMAP_COUNT
 };

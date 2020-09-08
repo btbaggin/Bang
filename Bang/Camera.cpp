@@ -2,10 +2,12 @@ const float CAMERA_BOUNDS = 0.2F;
 
 static void UpdateCamera(GameState* pState, Entity* pCharacter)
 {
-	const float min_bounds_x = pState->form->width * CAMERA_BOUNDS;
-	const float max_bounds_x = pState->form->width * (1 - CAMERA_BOUNDS);
-	const float min_bounds_y = pState->form->height * CAMERA_BOUNDS;
-	const float max_bounds_y = pState->form->height * (1 - CAMERA_BOUNDS);
+	float zoom = GetSetting(&pState->config, "camera_zoom")->f;
+	v2 viewport = g_state.game_started ? g_state.map->tile_size * zoom : V2(g_state.form->width, g_state.form->height);
+	const float min_bounds_x = viewport.Width * CAMERA_BOUNDS;
+	const float max_bounds_x = viewport.Width * (1 - CAMERA_BOUNDS);
+	const float min_bounds_y = viewport.Height * CAMERA_BOUNDS;
+	const float max_bounds_y = viewport.Height * (1 - CAMERA_BOUNDS);
 
 	Camera* camera = &pState->camera;
 	if (pCharacter->position.X < camera->position.X + min_bounds_x)
@@ -25,10 +27,9 @@ static void UpdateCamera(GameState* pState, Entity* pCharacter)
 	{
 		camera->position.Y = pCharacter->position.Y - max_bounds_y;
 	}
-	
-	
-	camera->position.X = clamp(0.0F, camera->position.X, (float)pState->map->width - pState->form->width);
-	camera->position.Y = clamp(0.0F, camera->position.Y, (float)pState->map->height - pState->form->height);
+		
+	camera->position.X = clamp(0.0F, camera->position.X, (float)pState->map->width - viewport.Width);
+	camera->position.Y = clamp(0.0F, camera->position.Y, (float)pState->map->height - viewport.Height);
 }
 
 static inline v2 WorldSpaceToCameraSpace(Camera* pCamera, v2 pPosition)
@@ -38,5 +39,7 @@ static inline v2 WorldSpaceToCameraSpace(Camera* pCamera, v2 pPosition)
 
 static inline mat4 GetOrthoMatrix(Camera* pCamera)
 {
-	return HMM_Orthographic(pCamera->position.X, pCamera->position.X + g_state.form->width, pCamera->position.Y + g_state.form->height, pCamera->position.Y, -Z_LAYER_MAX * Z_INDEX_DEPTH, Z_LAYER_MAX * Z_INDEX_DEPTH);
+	float zoom = GetSetting(&g_state.config, "camera_zoom")->f;
+	v2 viewport = g_state.game_started ? g_state.map->tile_size * zoom : V2(g_state.form->width, g_state.form->height);
+	return HMM_Orthographic(pCamera->position.X, pCamera->position.X + viewport.Width, pCamera->position.Y + viewport.Height, pCamera->position.Y, -Z_LAYER_MAX * Z_INDEX_DEPTH, Z_LAYER_MAX * Z_INDEX_DEPTH);
 }

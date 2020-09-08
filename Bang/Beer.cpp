@@ -10,7 +10,7 @@ static Beer* CreateBeer(GameState* pState, SpawnBeerEvent* pEvent)
 
 void Beer::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 {
-	const float RANGE = 10.0F;
+	const float RANGE = 7.0F;
 	float min = original_pos.Y - RANGE / 2;
 	float max = original_pos.Y + RANGE / 2;
 
@@ -29,11 +29,11 @@ void Beer::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	}
 }
 
+#ifndef _SERVER
 void Beer::Render(RenderState* pState)
 {
-#ifndef _SERVER
-	PushSizedQuad(pState, original_pos + V2(0, 24), V2(24, 32), V4(0, 0, 0, 0.5F), GetBitmap(g_transstate.assets, BITMAP_Shadow));
+	PushSizedQuad(pState, original_pos + V2(0, g_state.map->tile_size.Height * 0.7F), g_state.map->tile_size * 0.75F, V4(0, 0, 0, 0.5F), GetBitmap(g_transstate.assets, BITMAP_Shadow));
 
-	PushSizedQuad(pState, position, V2(32), GetBitmap(g_transstate.assets, BITMAP_Beer));
-#endif
+	PushSizedQuad(pState, position, g_state.map->tile_size, GetBitmap(g_transstate.assets, BITMAP_Beer));
 }
+#endif

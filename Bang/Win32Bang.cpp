@@ -1,11 +1,10 @@
 /*
 TODO:
-	Proper timers and stuff for arrows/beers
-	Particle systems for arrows and dust
+	Allow using beers
+	Allow game to finish
 	https://stackoverflow.com/questions/33858753/drawing-a-circle-using-opengl-c
 
 CLEANUP:
-	Better map, Better timings, etc...
 	Player hurt animation thingy
 	Outline player when you can attack?
 
