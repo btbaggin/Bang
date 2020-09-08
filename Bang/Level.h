@@ -20,4 +20,5 @@ struct TiledMap
 	Bitmap* bitmap;
 	u32 width;
 	u32 height;
+	v2 tile_size;
 };

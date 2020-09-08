@@ -27,8 +27,10 @@ static void RenderTiledmap(Assets* pAssets, const char* pPath, s32 pWidth, s32 p
 					u32 py = r * h + set->spacing;
 					float width = (float)tile.bitmap->width;
 					float height = (float)tile.bitmap->height;
-					tile.bitmap->uv_min = V2(px / width, py / height);
-					tile.bitmap->uv_max = V2((px + w) / width, (py + h) / height);
+					/*tile.bitmap->uv_min = V2(px / width, py / height);
+					tile.bitmap->uv_max = V2((px + w) / width, (py + h) / height);*/
+					tile.bitmap->uv_min = V2(px / width, (py + h) / height);
+					tile.bitmap->uv_max = V2((px + w) / width, py / height);
 
 					u32 ir = pHeight - (i / pWidth) - 1;
 					u32 ic = i % pWidth;
@@ -88,6 +90,7 @@ static void LoadTiledMap(TiledMap* pMap, const char* pPath, MemoryStack* pStack)
 	// get map width and height
 	pMap->width = tiled_map->width * tiled_map->tilewidth;
 	pMap->height = tiled_map->height * tiled_map->tileheight;
+	pMap->tile_size = V2((float)tiled_map->tilewidth, (float)tiled_map->tileheight);
 	
 	cute_tiled_layer_t* layer = tiled_map->layers;
 #ifndef _SERVER
