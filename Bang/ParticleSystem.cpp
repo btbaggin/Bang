@@ -85,15 +85,31 @@ static Particle* FindUnusedParticle(ParticleSystem* pSystem)
 
 static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreationOptions* pOptions)
 {
-	pParticle->position = pPosition;
+	if (pOptions->spawn_radius > 0)
+	{
+		float a = Random();
+		float b = Random();
+		if (b < a)
+		{
+			float temp = b;
+			b = a;
+			a = temp;
+		}
+		v2 offset = V2(b * pOptions->spread * cos(2 * HMM_PI * a / b), b * pOptions->spread * sin(2 * HMM_PI * a / b));
+		pParticle->position = pPosition + offset;
+	}
+	else
+	{
+		pParticle->position = pPosition;
+	}
 	pParticle->r = pOptions->r;
 	pParticle->g = pOptions->g;
 	pParticle->b = pOptions->b;
 	pParticle->a = pOptions->a;
-	pParticle->size = Random(pOptions->size_min, pOptions->size_max);
-	pParticle->life = Random(pOptions->life_min, pOptions->life_max);
+	pParticle->size = Random(pOptions->size);
+	pParticle->life = Random(pOptions->life);
 
-	v2 random_direction;
+	v2 random_direction = {};
 	if (pOptions->spread != 0)
 	{
 		float phi = Random(0.0F, 2 * (float)HMM_PI);
@@ -102,15 +118,14 @@ static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreati
 		float theta = acos(cosTheta);
 		float r = pOptions->spread * stbtt__cuberoot(u);
 
-		random_direction = { r * sin(theta) * cos(phi),
-							 r * sin(theta) * sin(phi) };
+		random_direction = V2(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi));
 	}
 	else
 	{
 		random_direction = {};
 	}
 
-	pParticle->velocity = (pOptions->direction + random_direction) * Random(pOptions->speed_min, pOptions->speed_max);
+	pParticle->velocity = (pOptions->direction + random_direction) * Random(pOptions->speed);
 }
 
 static void UpdateParticleSystem(ParticleSystem* pSystem, float pDeltaTime, ParticleUpdate* pUpdate, bool pAllowNewParticles = true)

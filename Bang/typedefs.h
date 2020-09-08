@@ -17,6 +17,12 @@ typedef hmm_vec3 v3;
 typedef hmm_vec2 v2;
 typedef hmm_mat4 mat4;
 
+struct Range
+{
+	float min;
+	float max;
+};
+
 #include "Math.h"
 
 #define clamp HMM_Clamp
