@@ -5,7 +5,7 @@ static void LoadNextScreen()
 {
 	EndTemporaryMemory(g_state.screen_reset);
 	ClearEntityList(&g_state.entities);
-	g_transstate.available_sounds.Clear();
+	ClearAllSounds(&g_state, &g_transstate);
 
 	g_interface.current_screen = g_interface.current_screen->CreateNextScreen(g_state.world_arena);
 	g_interface.current_screen->Load(&g_state);

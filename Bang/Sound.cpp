@@ -60,6 +60,12 @@ Sound* LoadSoundAsset(Assets* pAssets, const char* pFile)
 	return sound;
 }
 
+static void ClearAllSounds(GameState* pState, GameTransState* pTrans)
+{
+	pTrans->available_sounds.Clear();
+	pState->FirstPlaying = nullptr;
+}
+
 static PlayingSound* GetAvailablePlayingSound()
 {
 	PlayingSound* p = g_transstate.available_sounds.Request();

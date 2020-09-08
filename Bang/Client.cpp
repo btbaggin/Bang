@@ -142,6 +142,15 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			}
 			break;
 
+			case SERVER_MESSAGE_GameOver:
+			{
+				ReadMessage(pState->buffer, m, GameOverMessage);
+				EndScreen(3.0F);
+				((GameScreen*)g_interface.current_screen)->winner = m.winner;
+				g_state.physics.bodies.clear();
+			}
+			break;
+
 			case SERVER_MESSAGE_LeaveAnnoucement:
 				ReadMessage(pState->buffer, l, ClientLeave);
 				Client* c = pState->clients + l.client_id;
