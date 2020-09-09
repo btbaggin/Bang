@@ -86,8 +86,8 @@ static void InitializeRenderer(RenderState* pState)
 	f_shader = LoadShader(PARTICLE_FRAGMENT_SHADER, GL_FRAGMENT_SHADER);
 	pState->particle_program = CreateProgram(v_shader, f_shader);
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
@@ -129,6 +129,18 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 		glBindTexture(GL_TEXTURE_2D, vertices->texture);
 
 		glDrawElementsBaseVertex(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)(vertices->first_index * sizeof(u16)), vertices->first_vertex);
+	}
+	break;
+
+	case RENDER_GROUP_ENTRY_TYPE_Ellipse:
+	{
+		Renderable_Ellipse* vertices = (Renderable_Ellipse*)address;
+
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(pState->program.texture, 0);
+		glBindTexture(GL_TEXTURE_2D, g_transstate.assets->blank_texture);
+
+		glDrawArrays(GL_TRIANGLE_FAN, vertices->first_vertex, CIRCLE_FRAGMENTS);
 	}
 	break;
 
@@ -473,6 +485,28 @@ static void PushParticleSystem(RenderState* pState, ParticleSystem* pSystem)
 	Bitmap* bitmap = GetBitmap(g_transstate.assets, pSystem->texture);
 	if (bitmap) m->texture = bitmap->texture;
 	else m->texture = g_transstate.assets->blank_texture;
+}
+
+static void PushEllipse(RenderState* pState, v2 pCenter, v2 pRadius, v4 pColor)
+{
+	Vertex* vertices = PushArray(pState->vertices, Vertex, CIRCLE_FRAGMENTS);
+	float increment = 2.0F * (float)HMM_PI / CIRCLE_FRAGMENTS;
+
+	float currAngle = 0.0F;
+	for (u32 i = 0; i < CIRCLE_FRAGMENTS; i++)
+	{
+		Vertex* v = vertices + i;
+		v->position = V3(pRadius.X * cos(currAngle) + pCenter.X, pRadius.Y * sin(currAngle) + pCenter.Y, pState->z_index);
+		v->color = pColor;
+		v->uv = V2(0);
+
+		currAngle += increment;
+	}
+
+	Renderable_Ellipse* m = PushRenderGroupEntry(pState, Renderable_Ellipse, RENDER_GROUP_ENTRY_TYPE_Ellipse);
+	m->first_vertex = pState->vertex_count;
+
+	pState->vertex_count += CIRCLE_FRAGMENTS;
 }
 
 static inline void SetZLayer(RenderState* pState, Z_LAYERS pLayer)

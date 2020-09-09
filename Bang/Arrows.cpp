@@ -1,4 +1,4 @@
-void UpdateArrowParticles(Particle* pParticle, float pDeltaTime)
+PARTICLE_UPDATE(UpdateArrowParticles)
 {
 	pParticle->position += pParticle->velocity * pDeltaTime;
 }
@@ -14,7 +14,7 @@ static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 	options->direction = V2(0, 1);
 	options->life = { 0.25F, 0.5F };
 	options->size = { 18, 18 };
-	options->speed = { 10, 50 };
+	options->speed = { 1, 5 };
 	options->spread = GetSetting(&pState->config, "arrow_radius")->f / 2.0F;
 	b->system = SpawnParticleSystem(100, 300, BITMAP_Arrow, options);
 	b->system.position = pEvent->position;
@@ -30,8 +30,7 @@ void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 	float range = GetSetting(&pState->config, "arrow_radius")->f;
 
 	Entity* entities[MAX_PLAYERS];
-	u32 count;
-	FindEntitiesWithinRange(&pState->entities, position, range / 2, entities, &count, ENTITY_TYPE_Player);
+	u32 count = FindEntitiesWithinRange(&pState->entities, position, range, entities, MAX_PLAYERS, ENTITY_TYPE_Player);
 
 	for (u32 i = 0; i < count; i++)
 	{
@@ -56,7 +55,7 @@ void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 void Arrows::Render(RenderState* pState)
 {
 	float range = GetSetting(&g_state.config, "arrow_radius")->f;
-	PushSizedQuad(pState, position - V2(range / 2), V2(range), V4(1, 0, 0, 0.5F));
+	PushEllipse(pState, position, V2(range), V4(1, 0, 0, 0.3F));
 
 	PushParticleSystem(pState, &system);
 }

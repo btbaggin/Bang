@@ -85,7 +85,7 @@ static bool EvaluateWinCondition(GameState* pState, PLAYER_ROLES* pWinner)
 	u32 players = 0;
 	for (u32 i = 0; i < MAX_PLAYERS; i++)
 	{
-		Player* p = pState->players.items[i];
+		Player* p = pState->players[i];
 		if (IsEntityValid(&pState->entities, p))
 		{
 			if (p->state.health <= 0)
@@ -275,7 +275,7 @@ int main()
 
 				if (g_state.game_started)
 				{
-					Player* p = g_state.players.items[l.client_id];
+					Player* p = g_state.players[l.client_id];
 					RemoveEntity(&g_state.entities, p);
 					RemoveRigidBody(p, &g_state.physics);
 				}
@@ -324,7 +324,7 @@ int main()
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
 					Client* c = g_net.clients + i;
-					Player* p = g_state.players.items[i];
+					Player* p = g_state.players[i];
 					if (IsClientConnected(c))
 					{
 						if (s.roles[i] == PLAYER_ROLE_Unknown)
@@ -355,7 +355,7 @@ int main()
 				client->dt = i.dt;
 				client->input_flags = i.flags;
 
-				Player* p = g_state.players.items[client_id];
+				Player* p = g_state.players[client_id];
 				if(i.attack_choice >= 0) p->state.team_attack_choice = i.attack_choice;
 				p->Update(&g_state, i.dt, i.flags);
 

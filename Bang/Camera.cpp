@@ -32,11 +32,6 @@ static void UpdateCamera(GameState* pState, Entity* pCharacter)
 	camera->position.Y = clamp(0.0F, camera->position.Y, (float)pState->map->height - viewport.Height);
 }
 
-static inline v2 WorldSpaceToCameraSpace(Camera* pCamera, v2 pPosition)
-{
-	return pPosition - pCamera->position;
-}
-
 static inline mat4 GetOrthoMatrix(Camera* pCamera)
 {
 	float zoom = GetSetting(&g_state.config, "camera_zoom")->f;

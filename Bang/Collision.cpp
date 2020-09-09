@@ -488,7 +488,7 @@ static void RemoveRigidBody(Entity* pBody, PhysicsScene* pScene)
 	}
 }
 
-static void RenderRigidBodies(RenderState* pState, PhysicsScene* pScene)
+static void DEBUG_RenderRigidBodies(RenderState* pState, PhysicsScene* pScene)
 {
 #if DEBUG_DRAW_RIGIDBODIES
 	for (u32 i = 0; i < pScene->bodies.size(); ++i)

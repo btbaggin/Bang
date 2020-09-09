@@ -1,5 +1,6 @@
 class GameStartModal : public ModalWindowContent
 {
+	bool is_host;
 	ElementGroup group = {};
 	const float MARGIN = 5.0F;
 	Textbox name = {};
@@ -14,12 +15,15 @@ class GameStartModal : public ModalWindowContent
 		RenderTextbox(pState, &name, pPosition);
 		pPosition.Y += GetFontSize(FONT_Debug) + MARGIN;
 
-		PushText(pState, FONT_Debug, "Server IP", pPosition, COLOR_BLACK);
-		pPosition.Y += GetFontSize(FONT_Debug) + MARGIN;
-		for (u32 i = 0; i < ArrayCount(ip); i++)
+		if (!is_host)
 		{
-			RenderTextbox(pState, &ip[i], pPosition);
-			pPosition.X += ip[i].width + MARGIN;
+			PushText(pState, FONT_Debug, "Server IP", pPosition, COLOR_BLACK);
+			pPosition.Y += GetFontSize(FONT_Debug) + MARGIN;
+			for (u32 i = 0; i < ArrayCount(ip); i++)
+			{
+				RenderTextbox(pState, &ip[i], pPosition);
+				pPosition.X += ip[i].width + MARGIN;
+			}
 		}
 	}
 	MODAL_RESULTS Update(GameState* pState, float pDeltaTime)
@@ -27,10 +31,17 @@ class GameStartModal : public ModalWindowContent
 		if (IsKeyPressed(KEY_Enter))
 		{
 			u8 ip_value[4];
-			for (u32 i = 0; i < ArrayCount(ip); i++) ip_value[i] = atoi(ip[i].string);
+			if (!is_host)
+			{
+				for (u32 i = 0; i < ArrayCount(ip); i++) ip_value[i] = atoi(ip[i].string);
+			}
+			else
+			{
+				ip_value[0] = 127; ip_value[1] = 0; ip_value[2] = 0; ip_value[3] = 1;
+			}
 
 			IPEndpoint server = Endpoint(ip_value[0], ip_value[1], ip_value[2], ip_value[3], PORT);
-			switch (AttemptJoinServer(&g_net, name.string))
+			switch (AttemptJoinServer(&g_net, name.string, server))
 			{
 			case JOIN_STATUS_Ok:
 				return MODAL_RESULT_Ok;
@@ -68,10 +79,11 @@ class GameStartModal : public ModalWindowContent
 	}
 
 public:
-	GameStartModal()
+	GameStartModal(bool pIsHost)
 	{
 		float width = GetModalSize(MODAL_SIZE_Third);
 		CreateTextbox(&name, &group, width, FONT_Debug);
+		is_host = pIsHost;
 		for (u32 i = 0; i < ArrayCount(ip); i++)
 		{
 			CreateTextbox(&ip[i], &group, (width - (MARGIN * 4)) / 4.0F, FONT_Debug);

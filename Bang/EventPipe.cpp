@@ -41,7 +41,7 @@ static u32 SerializeEvents(u8** pBuffer, EventPipe* pPipe)
 	u8 size = Serialize(pBuffer, &pPipe->events.count, u8);
 	for (u32 i = 0; i < pPipe->events.count; i++)
 	{
-		Event* e = pPipe->events.items[i];
+		Event* e = pPipe->events[i];
 		switch (e->type)
 		{
 			case GAME_EVENT_SpawnBeer:
@@ -87,7 +87,7 @@ static void ProcessEvents(GameState* pState, EventPipe* pPipe)
 {
 	for (u32 i = 0; i < pPipe->events.count; i++)
 	{
-		Event* e = pPipe->events.items[i];
+		Event* e = pPipe->events[i];
 		switch (e->type)
 		{
 			case GAME_EVENT_SpawnBeer:

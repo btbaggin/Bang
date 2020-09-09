@@ -74,7 +74,6 @@ struct ParticleCreationOptions
 	u8 r, g, b, a;
 };
 
-
 struct Particle
 {
 	v2 velocity;
@@ -90,7 +89,8 @@ struct Particle
 	}
 };
 
-typedef void ParticleUpdate(Particle* pParticle, float pDeltaTime);
+#define PARTICLE_UPDATE(name) void name(Particle* pParticle, float pDeltaTime)
+typedef PARTICLE_UPDATE(ParticleUpdate);
 
 struct ParticleSystem
 {

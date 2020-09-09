@@ -168,12 +168,14 @@ static void WrapText(char* pText, u32 pLength, FONTS pFont, float pWidth)
 		}
 		else if (i == pLength || (pText[i] > 0 && isspace(pText[i])))
 		{
+			//When we find a space, measure the word previous to this space
 			word_size = 0;
 			for (u32 j = last_index; j < i; j++)
 			{
 				word_size += CharWidth(pFont, pText[j]);
 			}
 
+			//If we are now past the size we are wrapping, make the last space a newline
 			total_size += word_size;
 			if (total_size > pWidth)
 			{

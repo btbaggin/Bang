@@ -98,6 +98,8 @@ struct GameState
 
 	bool is_running;
 	bool game_started;
+
+	HANDLE server_handle;
 };
 
 struct Assets;

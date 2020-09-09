@@ -43,12 +43,10 @@
     <ClInclude Include="Timer.h">
       <Filter>Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Level.h">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="Interface.h">
       <Filter>Interface</Filter>
     </ClInclude>
+    <ClInclude Include="Level.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico" />
@@ -105,9 +103,6 @@
       <Filter>Physics</Filter>
     </ClCompile>
     <ClCompile Include="Win32Server.cpp" />
-    <ClCompile Include="Level.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Win32Common.cpp" />
     <ClCompile Include="Player.cpp">
       <Filter>Entities</Filter>
@@ -117,9 +112,6 @@
     </ClCompile>
     <ClCompile Include="Interface.cpp">
       <Filter>Interface</Filter>
-    </ClCompile>
-    <ClCompile Include="LevelCollisionMask.cpp">
-      <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Render</Filter>
@@ -149,8 +141,10 @@
       <Filter>Entities</Filter>
     </ClCompile>
     <ClCompile Include="Screen.cpp">
-      <Filter>Game</Filter>
+      <Filter>Interface</Filter>
     </ClCompile>
+    <ClCompile Include="Level.cpp" />
+    <ClCompile Include="LevelCollisionMask.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Assets">
@@ -170,9 +164,6 @@
     </Filter>
     <Filter Include="Physics">
       <UniqueIdentifier>{9a233407-4ac9-4b81-9920-7a4bbea26d83}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game">
-      <UniqueIdentifier>{1b5acd13-62b6-4fdd-8c74-18c28d799e2b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Interface">
       <UniqueIdentifier>{4c9baa77-877d-459e-9ee3-f6ff4f94d60e}</UniqueIdentifier>

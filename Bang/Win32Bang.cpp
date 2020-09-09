@@ -1,12 +1,12 @@
 /*
 TODO:
 	Allow using beers
-	Allow game to finish
-	https://stackoverflow.com/questions/33858753/drawing-a-circle-using-opengl-c
 
 CLEANUP:
 	Player hurt animation thingy
 	Outline player when you can attack?
+	Do initial server connection on background thread
+	Arrows look like garbage
 
 BUGS:
 */
@@ -22,6 +22,7 @@ BUGS:
 #include "intrin.h"
 #include <Windows.h>
 #include <dsound.h>
+#include "Processthreadsapi.h"
 
 #include "Bang.h"
 #include "Input.h"
@@ -318,10 +319,7 @@ void Win32GetInput(GameInput* pInput, HWND pHandle)
 
 static void RenderGameElements(GameState* pState, RenderState* pRender)
 {
-	if(pState->game_started)
-	{
-		g_interface.current_screen->Render(pRender, pState);
-	}
+	g_interface.current_screen->Render(pRender, pState);
 
 	SetZLayer(pRender, Z_LAYER_Player);
 	for (u32 i = 0; i < pState->entities.end_index; i++)
@@ -334,7 +332,6 @@ static void RenderGameElements(GameState* pState, RenderState* pRender)
 	}
 }
 
-#define LOCAL_TESTING
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 					  _In_opt_ HINSTANCE hPrevInstance,
 					  _In_ LPWSTR    lpCmdLine,
@@ -368,6 +365,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	void* world_memory = VirtualAlloc(NULL, world_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 	ZeroMemory(world_memory, world_size);
 
+	//Basic state setup
 	g_state.world_arena = CreateMemoryStack(world_memory, world_size);
 	g_state.entities = GetEntityList(g_state.world_arena);
 	g_state.config = LoadConfigFile(CONFIG_FILE_LOCATION, g_state.world_arena);
@@ -400,7 +398,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	char xinput_path[MAX_PATH];
 	PathCombineA(xinput_path, system_path, "xinput1_3.dll");
-
 	FILE* f = fopen(xinput_path, "r");
 	if (f)
 	{
@@ -444,11 +441,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		Win32GetInput(&g_input, g_state.form->handle);
 		Tick(&time);
 
+		//Frame start
 		TemporaryMemoryHandle h = BeginTemporaryMemory(g_transstate.trans_arena);
+
+		//Handle any incoming messages from the server
 		ProcessServerMessages(&g_net, prediction_id, time.delta_time);
 
-		UpdateInterface(&g_state, &g_interface, time.delta_time);
-		g_interface.current_screen->Update(&g_state, time.delta_time, prediction_id);
+		//Update all entities, player will be handled specially in the screen update since
+		//its synced with the server
+		for (u32 i = 0; i < g_state.entities.end_index; i++)
+		{
+			Entity* e = g_state.entities.entities[i];
+			if (IsEntityValid(&g_state.entities, e) && e->type != ENTITY_TYPE_Player)
+			{
+				e->Update(&g_state, time.delta_time, 0);
+			}
+		}
+
+		//Update current interface
+		HandleModals(&g_state, &g_interface, time.delta_time);
+		g_interface.current_screen->Update(&g_state, &g_interface, time.delta_time, prediction_id);
 		if (g_interface.transition_time > 0)
 		{
 			g_interface.transition_time -= time.delta_time;
@@ -456,8 +468,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 
 		StepPhysics(&g_state.physics, ExpectedSecondsPerFrame);
+		
+		//Process any events generated from the server
 		ProcessEvents(&g_state, &g_state.events);
 
+		//Process any callbacks from tasks (mainly used to upload assets to GPU since it must be done on the main thread)
 		ProcessTaskCallbacks(&g_state.callbacks);
 
 		v2 size = V2(g_state.form->width, g_state.form->height);
@@ -466,10 +481,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		RenderGameElements(&g_state, g_transstate.render_state);
-		RenderRigidBodies(g_transstate.render_state, &g_state.physics);
+		DEBUG_RenderRigidBodies(g_transstate.render_state, &g_state.physics);
 
 		EndRenderPass(size, g_transstate.render_state);
 
+		//Interface is done on its own render pass
 		RenderInterface(&g_state, &g_interface, g_transstate.render_state);
 		SwapBuffers(g_state.form);
 
@@ -562,6 +578,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	CloseHandle(work_queue.Semaphore);
 	UnregisterClassW(WINDOW_CLASS, hInstance);
 
+	if (g_state.server_handle) TerminateProcess(g_state.server_handle, 0);
+
 	VirtualFree(world_memory, 0, MEM_RELEASE);
 	VirtualFree(trans_memory, 0, MEM_RELEASE);
 
@@ -570,8 +588,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	return 0;
 }
-
-
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

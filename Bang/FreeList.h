@@ -63,6 +63,11 @@ public:
 	{
 		items[count++] = item;
 	}
+
+	T& operator[](int index)
+	{
+		return items[index];
+	}
 };
 
 template<typename T, unsigned N>
@@ -75,5 +80,10 @@ public:
 	void AddItem(T item)
 	{
 		items[count++] = item;
+	}
+
+	T& operator[](int index)
+	{
+		return items[index];
 	}
 };

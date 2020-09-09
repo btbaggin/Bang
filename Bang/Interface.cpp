@@ -45,7 +45,7 @@ static void UpdateElementGroup(ElementGroup* pGroup)
 		s32 focus_index = -1;
 		for (u32 i = 0; i < pGroup->elements.count; i++)
 		{
-			UiElement* element = pGroup->elements.items[i];
+			UiElement* element = pGroup->elements[i];
 			if (element->focused)
 			{
 				focus_index = i;
@@ -54,7 +54,7 @@ static void UpdateElementGroup(ElementGroup* pGroup)
 		}
 		if (focus_index > -1)
 		{
-			UiElement* element = pGroup->elements.items[focus_index];
+			UiElement* element = pGroup->elements[focus_index];
 			element->focused = false;
 		}	
 
@@ -64,7 +64,7 @@ static void UpdateElementGroup(ElementGroup* pGroup)
 		if (focus_index > (s32)pGroup->elements.count - 1) focus_index = 0;
 		else if (focus_index < 0) focus_index = pGroup->elements.count - 1;
 
-		UiElement* focus= pGroup->elements.items[focus_index];
+		UiElement* focus= pGroup->elements[focus_index];
 		focus->focused = true;
 	}
 }
@@ -95,8 +95,7 @@ static void RenderModalWindow(RenderState* pState, Interface* pInterface)
 	content->Render(pos + V2(10), pState);
 }
 
-
-static void UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime)
+static void HandleModals(GameState* pState, Interface* pInterface, float pDeltaTime)
 {
 	if (pInterface->modal_index >= 0)
 	{
@@ -113,10 +112,6 @@ static void UpdateInterface(GameState* pState, Interface* pInterface, float pDel
 			pInterface->modal_index--;
 			delete modal->content;
 		}
-	}
-	else
-	{
-		pInterface->current_screen->UpdateInterface(pState, pInterface, pDeltaTime);
 	}
 }
 

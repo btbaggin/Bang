@@ -35,8 +35,7 @@ static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, 
 {
 	u32 range = GetSetting(&pState->config, "player_attack_range")->i;
 	Entity* entities[20];
-	u32 count;
-	FindEntitiesWithinRange(&pState->entities, pPlayer->position, (float)range, entities, &count, ENTITY_TYPE_Player);
+	u32 count = FindEntitiesWithinRange(&pState->entities, pPlayer->position, (float)range, entities, 20, ENTITY_TYPE_Player);
 
 	for (u32 i = 0; i < count; i++)
 	{
@@ -50,7 +49,7 @@ static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, 
 	return nullptr;
 }
 
-void UpdateDustParticles(Particle* pParticle, float pDeltaTime)
+PARTICLE_UPDATE(UpdateDustParticles)
 {
 	pParticle->size -= pDeltaTime * 2;
 	if (pParticle->size <= 0) pParticle->size = 0;
@@ -74,6 +73,9 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	options->speed = { 1, 5 };
 	options->spawn_radius = 5;
 	p->dust = SpawnParticleSystem(5, 10, BITMAP_Dust, options);
+
+	p->walking = LoopSound(g_transstate.assets, SOUND_Walking, 0.25F);
+	PauseSound(p->walking);
 #endif
 
 	u32 health = GetSetting(&g_state.config, "player_health")->i;
@@ -84,7 +86,7 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	RigidBodyCreationOptions o;
 	o.density = 1.0F;
 	o.type = SHAPE_Poly;
-	o.width = pState->map->tile_size.Height * 0.8F;;
+	o.width = pState->map->tile_size.Height * 0.8F;
 	o.height = pState->map->tile_size.Height;
 	o.offset = V2(0, 0);
 	o.entity = p;
@@ -97,11 +99,6 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	lengths[0] = 6; lengths[1] = 4; lengths[2] = 6;
 	lengths[3] = 6; lengths[4] = 4; lengths[5] = 6;
 	p->bitmap = CreateAnimatedBitmap(BITMAP_Character, 6, lengths, V2(30, 48));
-
-#ifndef _SERVER
-	p->walking = LoopSound(g_transstate.assets, SOUND_Walking, 0.25F);
-	PauseSound(p->walking);
-#endif
 
 	pState->players.AddItem(p);
 	return p;
@@ -137,8 +134,9 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 		{
 			if (state.team_attack_choice == ATTACK_ON_CD)
 			{
+				float time = GetSetting(&pState->config, "attack_cooldown")->f;
 				state.team_attack_choice = ATTACK_ROLLING;
-				ResetTimer(&attack_choose_timer, 3.0F);
+				ResetTimer(&attack_choose_timer, time);
 			}
 			else if (state.team_attack_choice >= 0)
 			{
@@ -200,8 +198,7 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 		if (local_state.beers < MAX_BEERS)
 		{
 			Entity* entities[10];
-			u32 count;
-			FindEntitiesWithinRange(&pState->entities, position, 32.0F, entities, &count, ENTITY_TYPE_Beer);
+			u32 count = FindEntitiesWithinRange(&pState->entities, position, 32.0F, entities, 10, ENTITY_TYPE_Beer);
 			if (count > 0)
 			{
 				local_state.beers++;
@@ -265,7 +262,7 @@ void Player::Render(RenderState* pState)
 		const v2 size = V2(g_state.map->tile_size.Width * 0.8F, g_state.map->tile_size.Height);
 		color = team_colors[team];
 		//Player
-		PushSizedQuad(pState, position + V2(0, g_state.map->tile_size.Height * 0.7F), g_state.map->tile_size * 0.75F, V4(1, 1, 1, 0.5), GetBitmap(g_transstate.assets, BITMAP_Shadow));
+		PushEllipse(pState, position + V2(g_state.map->tile_size.Width / 2, g_state.map->tile_size.Height), V2(g_state.map->tile_size.Width / 3, g_state.map->tile_size.Height / 6), V4(0, 0, 0, 0.2F));
 		RenderAnimation(pState, position, size, color, &bitmap);
 	}
 

@@ -166,8 +166,6 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	AddSoundAsset(assets, SOUND_Arrows, "..\\..\\Resources\\arrows.wav");
 	AddSoundAsset(assets, SOUND_Background, "..\\..\\Resources\\background.wav");
 	AddSoundAsset(assets, SOUND_Sword, "..\\..\\Resources\\sword.wav");
-	//AddBitmapAsset(assets, BITMAP_Background, ".\\Assets\\background.jpg");
-	//AddBitmapAsset(assets, BITMAP_Placeholder, ".\\Assets\\placeholder.jpg");
 
 	AddBitmapAsset(assets, BITMAP_MainMenu1, "..\\..\\Resources\\Main Menu\\1.png");
 	AddBitmapAsset(assets, BITMAP_MainMenu2, "..\\..\\Resources\\Main Menu\\2.png");
@@ -177,7 +175,6 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	AddBitmapAsset(assets, BITMAP_Title, "..\\..\\Resources\\title.png");
 	AddBitmapAsset(assets, BITMAP_Character, "..\\..\\Resources\\character.png");
 	AddBitmapAsset(assets, BITMAP_Target, "..\\..\\Resources\\target.png");
-	AddBitmapAsset(assets, BITMAP_Shadow, "..\\..\\Resources\\shadow.png");
 	AddBitmapAsset(assets, BITMAP_Beer, "..\\..\\Resources\\beer.png");
 	AddBitmapAsset(assets, BITMAP_Dust, "..\\..\\Resources\\dust.png");
 	AddBitmapAsset(assets, BITMAP_Arrow, "..\\..\\Resources\\arrow.png");

@@ -81,10 +81,8 @@ struct Screen
 {
 	virtual void Load(GameState* pState) = 0;
 
-	virtual void Update(GameState* pState, float pDeltaTime, u32 pPredictionId) = 0;
+	virtual void Update(GameState* pState, Interface* pInterface, float pDeltaTime, u32 pPreditionId) = 0;
 	virtual void Render(RenderState* pRender, GameState* pState) = 0;
-
-	virtual void UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime) = 0;
 	virtual void RenderInterface(RenderState* pRender, GameState* pState) = 0;
 
 	virtual Screen* CreateNextScreen(MemoryStack* pStack) = 0;
@@ -110,10 +108,8 @@ struct MainMenu : Screen
 	s16 menu_index;
 	void Load(GameState* pState);
 
-	void Update(GameState* pState, float pDeltaTime, u32 pPredictionId) { };
+	void Update(GameState* pState, Interface* pInterface, float pDeltaTime, u32 pPreditionId);
 	void Render(RenderState* pRender, GameState* pState) { };
-
-	void UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime);
 	void RenderInterface(RenderState* pRender, GameState* pState);
 
 	Screen* CreateNextScreen(MemoryStack* pStack);
@@ -124,10 +120,8 @@ struct LobbyScreen : Screen
 	Button start_button;
 	void Load(GameState* pState);
 
-	void Update(GameState* pState, float pDeltaTime, u32 pPredictionId) { };
+	void Update(GameState* pState, Interface* pInterface, float pDeltaTime, u32 pPreditionId);
 	void Render(RenderState* pRender, GameState* pState) { };
-
-	void UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime);
 	void RenderInterface(RenderState* pRender, GameState* pState);
 
 	Screen* CreateNextScreen(MemoryStack* pStack);
@@ -142,10 +136,8 @@ struct GameScreen : Screen
 
 	void Load(GameState* pState);
 
-	void Update(GameState* pState, float pDeltaTime, u32 pPredictionId);
+	void Update(GameState* pState, Interface* pInterface, float pDeltaTime, u32 pPreditionId);
 	void Render(RenderState* pRender, GameState* pState);
-
-	void UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime);
 	void RenderInterface(RenderState* pRender, GameState* pState);
 
 	Screen* CreateNextScreen(MemoryStack* pStack);

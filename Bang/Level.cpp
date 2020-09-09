@@ -90,7 +90,7 @@ static void LoadTiledMap(TiledMap* pMap, const char* pPath, MemoryStack* pStack)
 	// get map width and height
 	pMap->width = tiled_map->width * tiled_map->tilewidth;
 	pMap->height = tiled_map->height * tiled_map->tileheight;
-	pMap->tile_size = V2((float)tiled_map->tilewidth, (float)tiled_map->tileheight);
+	pMap->tile_size = V2((float)tiled_map->tilewidth * 2, (float)tiled_map->tileheight * 2);
 	
 	cute_tiled_layer_t* layer = tiled_map->layers;
 #ifndef _SERVER

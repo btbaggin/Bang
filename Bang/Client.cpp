@@ -1,10 +1,10 @@
 
-static JOIN_STATUS_CODES AttemptJoinServer(GameNetState* pState, const char* pName)
+static JOIN_STATUS_CODES AttemptJoinServer(GameNetState* pState, const char* pName, IPEndpoint pEndpoint)
 {
 	const u32 MAX_TRIES = 100;
 
 	NetStart(pState, &pState->send_socket);
-	pState->server_ip = Endpoint(127, 0, 0, 1, PORT);
+	pState->server_ip = pEndpoint;
 
 	Join j = {};
 	j.client_id = 0;
@@ -77,7 +77,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 					Client* c = pState->clients + i;
 					if (IsClientConnected(c))
 					{
-						Player* p = g_state.players.items[i];
+						Player* p = g_state.players[i];
 						v2 received_position = m.positions[i];
 						SyncedPlayerState received_state = m.state[i];
 
@@ -135,7 +135,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			case SERVER_MESSAGE_PlayerDied:
 			{
 				ReadMessage(pState->buffer, m, PlayerDiedMessage);
-				Player* p = g_state.players.items[m.client_id];
+				Player* p = g_state.players[m.client_id];
 				p->state.health = 0;
 				p->role = m.role;
 				RemoveRigidBody(p, &g_state.physics);
@@ -157,7 +157,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 				c->name[0] = 0;
 				if (g_state.game_started)
 				{
-					Player* p = g_state.players.items[l.client_id];
+					Player* p = g_state.players[l.client_id];
 					RemoveEntity(&g_state.entities, p);
 					RemoveRigidBody(p, &g_state.physics);
 				}

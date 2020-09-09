@@ -13,7 +13,7 @@ void MainMenu::Load(GameState* pState)
 	background.layers = 5;
 }
 
-void MainMenu::UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime)
+void MainMenu::Update(GameState* pState, Interface* pInterface, float pDeltaTime, u32 pPredictionId)
 {
 	if (IsTransitioning())
 	{
@@ -40,19 +40,19 @@ void MainMenu::UpdateInterface(GameState* pState, Interface* pInterface, float p
 		{
 			switch (menu_index)
 			{
-				/*case 0:
-				{
-					TransitionScreen(pState, SCREEN_Lobby);
-					StartServer();
-
-					break;
-
-				}*/
-			case 1:
+			case 0:
 			{
-				DisplayModalWindow(pInterface, new GameStartModal(), MODAL_SIZE_Third);
+				PROCESS_INFORMATION pi;
+				STARTUPINFOA si = {};
+				si.dwFlags = STARTF_USESHOWWINDOW;
+				si.wShowWindow = SW_MINIMIZE;
+				CreateProcessA("BangServer.exe", NULL, NULL, NULL, true, 0, NULL, NULL, &si, &pi);
+
+				pState->server_handle = pi.hProcess;
 			}
-			break;
+			case 1:
+				DisplayModalWindow(pInterface, new GameStartModal(menu_index == 0), MODAL_SIZE_Third);
+				break;
 
 			case 2:
 				pState->is_running = false;
@@ -68,7 +68,6 @@ void MainMenu::RenderInterface(RenderState* pRender, GameState* pState)
 
 	if (!IsTransitioning())
 	{
-
 		PushSizedQuad(pRender, V2((size.X - 200) / 2.0F, size.Height * 0.1F), V2(200, 100), GetBitmap(g_transstate.assets, BITMAP_Title));
 
 		v4 color = GetSetting(&pState->config, "menu_color")->V4;
@@ -96,7 +95,7 @@ void LobbyScreen::Load(GameState* pState)
 	start_button = CreateButton(V2(80, 40), "Start", V4(0.75F));
 }
 
-void LobbyScreen::UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime)
+void LobbyScreen::Update(GameState* pState, Interface* pInterface, float pDeltaTime, u32 pPredictionId)
 {
 	if (g_net.client_id == 0)
 	{
@@ -157,8 +156,27 @@ void GameScreen::Load(GameState* pState)
 	sound = LoopSound(g_transstate.assets, SOUND_Background, 0.5F);
 }
 
-void GameScreen::Update(GameState* pState, float pDeltaTime, u32 pPredictionId)
+
+void GameScreen::Render(RenderState* pRender, GameState* pState)
 {
+	if (!IsTransitioning())
+	{
+		SetZLayer(pRender, Z_LAYER_Background1);
+		UpdateCamera(pState, pState->players[g_net.client_id]);
+		PushSizedQuad(pRender, V2(0), V2((float)pState->map->width, (float)pState->map->height), pState->map->bitmap);
+	}
+}
+
+void GameScreen::Update(GameState* pState, Interface* pInterface, float pDeltaTime, u32 pPredictionId)
+{
+	intro_screen -= pDeltaTime;
+	Player* p = pState->players[g_net.client_id];
+	if (p->state.team_attack_choice == ATTACK_PENDING)
+	{
+		if (IsKeyPressed(KEY_Q)) p->state.team_attack_choice = attack_choices[0];
+		else if (IsKeyPressed(KEY_E)) p->state.team_attack_choice = attack_choices[1];
+	}
+
 	if (!IsTransitioning())
 	{
 		u32 flags = 0;
@@ -169,7 +187,7 @@ void GameScreen::Update(GameState* pState, float pDeltaTime, u32 pPredictionId)
 		if (IsKeyPressed(KEY_Space)) flags |= 1 << INPUT_Shoot;
 
 		Client* c = g_net.clients + g_net.client_id;
-		Player* p = g_state.players.items[g_net.client_id];
+		Player* p = g_state.players[g_net.client_id];
 
 		if (IsEntityValid(&pState->entities, p))
 		{
@@ -183,16 +201,7 @@ void GameScreen::Update(GameState* pState, float pDeltaTime, u32 pPredictionId)
 			SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
 
 			p->Update(pState, pDeltaTime, flags);
-			for (u32 i = 0; i < pState->entities.end_index; i++)
-			{
-				Entity* e = pState->entities.entities[i];
-				if (IsEntityValid(&pState->entities, e) && e->type != ENTITY_TYPE_Player)
-				{
-					e->Update(pState, pDeltaTime, 0);
-				}
-			}
-
-
+			
 			u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
 			PredictedMove* move = &g_net.moves[index];
 			PredictedMoveResult* result = &g_net.results[index];
@@ -204,50 +213,35 @@ void GameScreen::Update(GameState* pState, float pDeltaTime, u32 pPredictionId)
 		}
 	}
 }
-void GameScreen::Render(RenderState* pRender, GameState* pState)
-{
-	if (!IsTransitioning())
-	{
-		SetZLayer(pRender, Z_LAYER_Background1);
-		UpdateCamera(pState, pState->players.items[g_net.client_id]);
-		PushSizedQuad(pRender, V2(0), V2((float)pState->map->width, (float)pState->map->height), pState->map->bitmap);
-	}
-}
-
-void GameScreen::UpdateInterface(GameState* pState, Interface* pInterface, float pDeltaTime)
-{
-	intro_screen -= pDeltaTime;
-	Player* p = pState->players.items[g_net.client_id];
-	if (p->state.team_attack_choice == ATTACK_PENDING)
-	{
-		if (IsKeyPressed(KEY_Q)) p->state.team_attack_choice = attack_choices[0];
-		else if (IsKeyPressed(KEY_E)) p->state.team_attack_choice = attack_choices[1];
-	}
-}
 void GameScreen::RenderInterface(RenderState* pRender, GameState* pState)
 {
 	if (IsTransitioning())
 	{
-		v2 pos = V2(0);
-		PushQuad(pRender, pos, V2(pState->form->width, pState->form->height), V4(0, 0, 0, 1));
+		//Transitioning is after game is done, going back to main menu
+		v2 screen = V2(pState->form->width, pState->form->height);
+		PushQuad(pRender, V2(0), screen, V4(0, 0, 0, 1));
+		const char* text = nullptr;
 		switch (winner)
 		{
 		case PLAYER_ROLE_Sheriff:
-			PushText(pRender, FONT_Title, "Sheriff and Deputies win!", pos, V4(1));
+			text = "Sheriff and Deputies win!";
 			break;
 		case PLAYER_ROLE_Outlaw:
-			PushText(pRender, FONT_Title, "Outlaws win!", pos, V4(1));
+			text = "Outlaws win!";
 			break;
 		case PLAYER_ROLE_Renegade:
-			PushText(pRender, FONT_Title, "Renegade wins!", pos, V4(1));
+			text = "Renegade wins!";
 			break;
 		default:
 			assert(false);
 		}
+		v2 pos = CenterText(FONT_Title, text, screen);
+		PushText(pRender, FONT_Title, text, pos, V4(1));
 	}
 	else if (intro_screen > 0)
 	{
-		Player* p = pState->players.items[g_net.client_id];
+		//Into shows the goal when the game starts
+		Player* p = pState->players[g_net.client_id];
 		
 		v2 pos = V2(0, pState->form->height - (pState->form->height / 4));
 		PushQuad(pRender, pos, V2(pState->form->width, pState->form->height), V4(0, 0, 0, 0.8F));
@@ -271,7 +265,7 @@ void GameScreen::RenderInterface(RenderState* pRender, GameState* pState)
 	}
 	else
 	{
-		Player* p = pState->players.items[g_net.client_id];
+		Player* p = pState->players[g_net.client_id];
 		float ms = 0;
 		for (u32 i = 0; i < ArrayCount(g_net.latency_ms); i++)
 		{
@@ -279,7 +273,7 @@ void GameScreen::RenderInterface(RenderState* pRender, GameState* pState)
 		}
 		ms /= ArrayCount(g_net.latency_ms);
 
-		char buffer[10];
+		char buffer[12];
 		sprintf(buffer, "Ping: %dms", (u32)ms);
 		PushText(pRender, FONT_Debug, buffer, V2(0), COLOR_BLACK);
 

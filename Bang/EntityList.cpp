@@ -1,3 +1,6 @@
+//Generational index to store entities
+//When an entity is invalidated the version is incremented
+//Even though the pointer to that entity still may be valid, calling IsEntityValid will check if it has been removed
 static EntityList GetEntityList(MemoryStack* pStack)
 {
 	EntityList list = {};
@@ -8,7 +11,6 @@ static EntityList GetEntityList(MemoryStack* pStack)
 	return list;
 }
 
-//https://stackoverflow.com/questions/222557/what-uses-are-there-for-placement-new
 #define CreateEntity(list, struct_type) (struct_type*)AddEntity(list, PushClass(g_state.world_arena, struct_type), ENTITY_TYPE_##struct_type##);
 static Entity* AddEntity(EntityList* pList, Entity* pEntity, ENTITY_TYPES pType)
 {
@@ -71,18 +73,21 @@ static void ClearEntityList(EntityList* pList)
 	}
 }
 
-static void FindEntitiesWithinRange(EntityList* pList, v2 pPosition, float pRange, Entity** pEntities, u32* pCount, ENTITY_TYPES pType = ENTITY_TYPE_None)
+static u32 FindEntitiesWithinRange(EntityList* pList, v2 pPosition, float pRange, Entity** pEntities, u32 pMaxEntities, ENTITY_TYPES pType = ENTITY_TYPE_None)
 {
-	*pCount = 0;
+	u32 count = 0;
 	for (u32 i = 0; i < pList->end_index; i++)
 	{
 		Entity* e = pList->entities[i];
 		if (IsEntityValid(&g_state.entities, e) && HMM_LengthSquared(pPosition - e->position) < pRange * pRange)
 		{
-			if (pType != ENTITY_TYPE_None && pType == e->type)
+			if (pType == ENTITY_TYPE_None || pType == e->type)
 			{
-				pEntities[(*pCount)++] = e;
+				pEntities[count++] = e;
+				if (count >= pMaxEntities) break;
 			}
 		}
 	}
+
+	return count;
 }

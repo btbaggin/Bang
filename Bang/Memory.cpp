@@ -31,6 +31,7 @@ static void* PushAndZeroSize(MemoryStack* pStack, u64 pSize)
 	return size;
 }
 
+//use placement new feature for PushClass to push child classes onto our stack (ensures the vtable is set up correctly)
 #define PushStruct(pStack, pType) (pType*)PushSize(pStack, sizeof(pType))
 #define PushZerodStruct(pStack, pType)(pType*)PushAndZeroSize(pStack, sizeof(pType))
 #define PushClass(pStack, pType) new(PushStruct(pStack, pType)) pType
@@ -117,7 +118,6 @@ bool MergeMemoryBlocks(MemoryBlock* pFirst, MemoryBlock* pSecond)
 			char* expected_second = (char*)pFirst + sizeof(MemoryBlock) + pFirst->size;
 			if ((char*)pSecond == expected_second)
 			{
-
 				std::lock_guard<std::mutex> guard(pool_mutex);
 				pSecond->previous->next = pSecond->next;
 				pSecond->next->previous = pSecond->previous;

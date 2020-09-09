@@ -108,4 +108,4 @@ struct GameNetState
 #endif
 };
 
-static JOIN_STATUS_CODES AttemptJoinServer(GameNetState* pState, const char* pName);
+static JOIN_STATUS_CODES AttemptJoinServer(GameNetState* pState, const char* pName, IPEndpoint pEndpoint);

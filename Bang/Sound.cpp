@@ -45,7 +45,7 @@ Sound* LoadSoundAsset(Assets* pAssets, const char* pFile)
 		//Reading data
 		for (u32 i = 0; i < sound->samples.count; i++)
 		{
-			fread(&sound->samples.items[i], sample_size, 1, fin);
+			fread(&sound->samples[i], sample_size, 1, fin);
 			if (feof(fin)) DisplayErrorMessage("Unable to read wav file", ERROR_TYPE_Warning);
 		}
 
@@ -181,7 +181,7 @@ static void GameGetSoundSamples(GameState* pState, GameTransState* pTransState, 
 
 				for (u32 i = 0; i < samples; i++)
 				{
-					float sample = (float)sound->samples.items[current->samples_played + i];
+					float sample = (float)sound->samples[current->samples_played + i];
 					*channel0++ += current->volume * sample * mod;
 					*channel1++ += current->volume * sample * mod;
 				}

@@ -1,6 +1,7 @@
 #pragma once
 #include "shaders.h"
 const float Z_INDEX_DEPTH = 20.0F;
+const u32 CIRCLE_FRAGMENTS = 100;
 enum Z_LAYERS
 {
 	Z_LAYER_Background1,
@@ -18,6 +19,7 @@ enum RENDER_GROUP_ENTRY_TYPE : u8
 	RENDER_GROUP_ENTRY_TYPE_Line,
 	RENDER_GROUP_ENTRY_TYPE_Text,
 	RENDER_GROUP_ENTRY_TYPE_Quad,
+	RENDER_GROUP_ENTRY_TYPE_Ellipse,
 	RENDER_GROUP_ENTRY_TYPE_Matrix,
 	RENDER_GROUP_ENTRY_TYPE_ParticleSystem,
 };
@@ -45,6 +47,11 @@ struct Renderable_Quad
 	u32 first_index;
 	u32 first_vertex;
 	u32 texture;
+};
+
+struct Renderable_Ellipse
+{
+	u32 first_vertex;
 };
 
 struct Renderable_Line
