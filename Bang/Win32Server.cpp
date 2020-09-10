@@ -46,9 +46,7 @@ Timer beer_timer;
 Timer arrow_timer;
 
 #include "Win32Common.cpp"
-#include "Memory.cpp"
 #include "Logger.cpp"
-#include "Assets.cpp"
 #include "Memory.cpp"
 #include "ConfigFile.cpp"
 #include "EntityList.cpp"

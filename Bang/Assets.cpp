@@ -1,6 +1,5 @@
 #include <fstream>
 #include <sstream>
-#include "Assets.h"
 #include "Sound.cpp"
 #include "Font.cpp"
 #include "Bitmap.cpp"
@@ -244,15 +243,4 @@ void FreeAllAssets(Assets* pAssets)
 		FreeAsset(pAssets->fonts + i);
 	for (u32 i = 0; i < SOUND_COUNT; i++)
 		FreeAsset(pAssets->sounds + i);
-}
-
-void EvictOldestAsset(Assets* pAssets)
-{
-	AssetSlot* slot = nullptr;
-	u64 request = __rdtsc();
-
-	//TODO 
-
-
-	FreeAsset(slot);
 }

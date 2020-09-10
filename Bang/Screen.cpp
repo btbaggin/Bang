@@ -185,6 +185,7 @@ void GameScreen::Update(GameState* pState, Interface* pInterface, float pDeltaTi
 		if (IsKeyDown(KEY_Up)) flags |= 1 << INPUT_MoveUp;
 		if (IsKeyDown(KEY_Down)) flags |= 1 << INPUT_MoveDown;
 		if (IsKeyPressed(KEY_Space)) flags |= 1 << INPUT_Shoot;
+		if (IsKeyPressed(KEY_B)) flags |= 1 << INPUT_Beer;
 
 		Client* c = g_net.clients + g_net.client_id;
 		Player* p = g_state.players[g_net.client_id];

@@ -95,7 +95,7 @@ static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreati
 			b = a;
 			a = temp;
 		}
-		v2 offset = V2(b * pOptions->spread * cos(2 * HMM_PI * a / b), b * pOptions->spread * sin(2 * HMM_PI * a / b));
+		v2 offset = V2(b * pOptions->spawn_radius * cos(2 * HMM_PI * a / b), b * pOptions->spawn_radius * sin(2 * HMM_PI * a / b));
 		pParticle->position = pPosition + offset;
 	}
 	else
@@ -150,6 +150,7 @@ static void UpdateParticleSystem(ParticleSystem* pSystem, float pDeltaTime, Part
 		p->life -= pDeltaTime;
 		if (p->life > 0)
 		{
+			p->position += p->velocity * pDeltaTime;
 			if(pUpdate) pUpdate(p, pDeltaTime);
 
 			p->camera_distance = HMM_LengthSquared(p->position - g_state.camera.position);

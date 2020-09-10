@@ -41,6 +41,7 @@ class GameStartModal : public ModalWindowContent
 			}
 
 			IPEndpoint server = Endpoint(ip_value[0], ip_value[1], ip_value[2], ip_value[3], PORT);
+
 			switch (AttemptJoinServer(&g_net, name.string, server))
 			{
 			case JOIN_STATUS_Ok:
@@ -75,7 +76,19 @@ class GameStartModal : public ModalWindowContent
 
 	float GetHeight()
 	{
-		return (GetFontSize(FONT_Debug) + MARGIN) * 4;
+		if (is_host)
+		{
+			return (GetFontSize(FONT_Debug) + MARGIN) * 2;
+		}
+		else
+		{
+			return (GetFontSize(FONT_Debug) + MARGIN) * 4;
+		}
+	}
+
+	WORK_QUEUE_CALLBACK(ConnectToServer)
+	{
+
 	}
 
 public:

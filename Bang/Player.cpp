@@ -30,6 +30,12 @@ static void DamagePlayer(Player* pPlayer)
 	}
 }
 
+static void HealPlayer(Player* pPlayer)
+{
+	u32 max_health = GetSetting(&g_state.config, "player_health")->i;
+	pPlayer->state.health++;
+	if (pPlayer->state.health > max_health) pPlayer->state.health = max_health;
+}
 
 static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, PLAYER_TEAMS pTeam)
 {
@@ -37,23 +43,26 @@ static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, 
 	Entity* entities[20];
 	u32 count = FindEntitiesWithinRange(&pState->entities, pPlayer->position, (float)range, entities, 20, ENTITY_TYPE_Player);
 
+	float min = FLT_MAX;
+	Player* closest = nullptr;
 	for (u32 i = 0; i < count; i++)
 	{
 		Player* p = (Player*)entities[i];
-		if (p != pPlayer && p->team == pTeam)
+		if (p != pPlayer && HMM_LengthSquared(pPlayer->position - p->position) < min)
 		{
-			return p;
+			closest = p;
+			min = HMM_LengthSquared(pPlayer->position - p->position);
 		}
 	}
 
-	return nullptr;
+	return closest;
 }
 
 PARTICLE_UPDATE(UpdateDustParticles)
 {
 	pParticle->size -= pDeltaTime * 2;
 	if (pParticle->size <= 0) pParticle->size = 0;
-	pParticle->a -= 10;
+	pParticle->a -= min(pParticle->a, Random((u32)6, 9));
 }
 
 static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
@@ -64,19 +73,18 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	p->state.team_attack_choice = ATTACK_ON_CD;
 	p->death_message_sent = false;
 
-#ifndef _SERVER
 	ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
 	options->r = 255; options->g = 255; options->b = 255; options->a = 255;
-	options->direction = V2(0);
+	options->direction = V2(0, -1);
 	options->life = { 0.25F, 0.5F };
-	options->size = { pState->map->tile_size.Width * 0.5F, pState->map->tile_size.Width * 0.5F };
+	options->size = { pState->map->tile_size.Width * 0.25F, pState->map->tile_size.Width * 0.75F };
 	options->speed = { 1, 5 };
 	options->spawn_radius = 5;
-	p->dust = SpawnParticleSystem(5, 10, BITMAP_Dust, options);
+	options->spread = 1;
+	p->dust = SpawnParticleSystem(10, 15, BITMAP_Dust, options);
 
 	p->walking = LoopSound(g_transstate.assets, SOUND_Walking, 0.25F);
 	PauseSound(p->walking);
-#endif
 
 	u32 health = GetSetting(&g_state.config, "player_health")->i;
 	p->local_state = {};
@@ -109,6 +117,8 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	if (state.health > 0)
 	{
 		float speed = GetSetting(&g_state.config, "player_speed")->f * pState->map->tile_size.Width;
+		Player* attackee = FindPlayersWithinAttackRange(pState, this, (PLAYER_TEAMS)state.team_attack_choice);
+		if (attackee) attackee->highlight = true;
 
 		bool attacking = false;
 		v2 velocity = {};
@@ -138,16 +148,19 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 				state.team_attack_choice = ATTACK_ROLLING;
 				ResetTimer(&attack_choose_timer, time);
 			}
-			else if (state.team_attack_choice >= 0)
+			else if (state.team_attack_choice >= 0 && attackee && attackee->team == state.team_attack_choice)
 			{
-				Player* attackee = FindPlayersWithinAttackRange(pState, this, (PLAYER_TEAMS)state.team_attack_choice);
-				if (attackee)
-				{
-					PlaySound(g_transstate.assets, SOUND_Sword, 1.0F, this);
-					DamagePlayer(attackee);
-					attacking = true;
-					state.team_attack_choice = ATTACK_ON_CD;
-				}
+				PlaySound(g_transstate.assets, SOUND_Sword, 1.0F, this);
+				DamagePlayer(attackee);
+				attacking = true;
+				state.team_attack_choice = ATTACK_ON_CD;
+			}
+		}
+		else if (HasFlag(1 << INPUT_Beer, pInputFlags))
+		{
+			if (attackee)
+			{
+				HealPlayer(attackee);
 			}
 		}
 
@@ -185,12 +198,10 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 	#endif
 		}
 
-	#ifndef _SERVER
 		dust.position = position + V2(pState->map->tile_size.Width / 2, pState->map->tile_size.Height);
 		UpdateParticleSystem(&dust, pDeltaTime, UpdateDustParticles, !IsZero(velocity));
 		if (!IsZero(velocity)) ResumeLoopSound(walking);
 		else PauseSound(walking);
-	#endif
 
 		//Invulnerability after being attacked
 		if (TickTimer(&invuln_timer, pDeltaTime)) StopTimer(&invuln_timer);
@@ -263,6 +274,11 @@ void Player::Render(RenderState* pState)
 		color = team_colors[team];
 		//Player
 		PushEllipse(pState, position + V2(g_state.map->tile_size.Width / 2, g_state.map->tile_size.Height), V2(g_state.map->tile_size.Width / 3, g_state.map->tile_size.Height / 6), V4(0, 0, 0, 0.2F));
+		if (highlight)
+		{
+			RenderAnimation(pState, position - V2(3), size + V2(6), V4(1, 0, 0, 1), &bitmap);
+			highlight = false;
+		}
 		RenderAnimation(pState, position, size, color, &bitmap);
 	}
 

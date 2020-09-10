@@ -145,6 +145,30 @@ void Free(void* pMemory)
 	}
 }
 
+void FindOldestAsset(AssetSlot* pAssets, u32 pCount, u64* pTime, AssetSlot** pOldest)
+{
+	for (u32 i = 0; i < pCount; i++)
+	{
+		AssetSlot* slot = pAssets + i;
+		if (slot->last_requested < *pTime && slot->last_requested != 0)
+		{
+			*pTime = slot->last_requested;
+			*pOldest = slot;
+		}
+	}
+}
+void EvictOldestAsset(Assets* pAssets)
+{
+	AssetSlot* slot = nullptr;
+	u64 request = __rdtsc();
+
+	FindOldestAsset(pAssets->bitmaps, BITMAP_COUNT, &request, &slot);
+	FindOldestAsset(pAssets->fonts, FONT_COUNT, &request, &slot);
+	FindOldestAsset(pAssets->sounds, SOUND_COUNT, &request, &slot);
+
+	FreeAsset(slot);
+}
+
 void* Alloc(Assets* pAssets, u64 pSize)
 {
 	void* result = nullptr;

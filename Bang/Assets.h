@@ -6,6 +6,18 @@
 #define STBI_NO_GIF
 #include "stb\stb_image.h"
 
+//Stub out any related asset method since assets arent loaded on the server
+#ifdef _SERVER
+#define SpawnParticleSystem(...) {}
+#define UpdateParticleSystem(...)
+#define LoopSound(...) nullptr
+#define PauseSound(...)
+#define StopSound(...)
+#define PlaySound(...) nullptr
+#define ResumeLoopSound(...)
+#define FreeAsset(...)
+#endif
+
 enum SOUND_STATUS : u8
 {
 	SOUND_STATUS_Play,
@@ -224,5 +236,36 @@ struct chunk_t
 	unsigned long size;
 };
 
-void EvictOldestAsset(Assets* pAssets);
+static AnimatedBitmap CreateAnimatedBitmap(BITMAPS pBitmap, u32 pAnimationCount, u32* pAnimationLengths, v2 pFrameSize)
+{
+	AnimatedBitmap bitmap;
+	bitmap.bitmap = pBitmap;
+	bitmap.animation_count = pAnimationCount;
+	bitmap.current_animation = 0;
+	bitmap.current_index = 0;
+	bitmap.frame_size = pFrameSize;
+	bitmap.animation_lengths = pAnimationLengths;
+	bitmap.frame_time = 0;
+	return bitmap;
+}
+
+static void UpdateAnimation(AnimatedBitmap* pBitmap, float pDeltaTime)
+{
+	if ((pBitmap->frame_time += pDeltaTime) >= pBitmap->frame_duration)
+	{
+		pBitmap->frame_time = 0;
+		pBitmap->current_index++;
+		if (pBitmap->current_index >= *(pBitmap->animation_lengths + pBitmap->current_animation))
+		{
+			pBitmap->current_index = 0;
+		}
+	}
+}
+
+static bool AnimationIsComplete(AnimatedBitmap* pBitmap)
+{
+	return pBitmap->current_index == pBitmap->animation_lengths[pBitmap->current_animation] - 1;
+}
+
 void RequestAsset(Assets* pAssets, AssetSlot* pAsset, ASSET_TYPES pType);
+void FreeAsset(AssetSlot* pSlot);

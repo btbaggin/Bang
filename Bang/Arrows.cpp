@@ -1,12 +1,6 @@
-PARTICLE_UPDATE(UpdateArrowParticles)
-{
-	pParticle->position += pParticle->velocity * pDeltaTime;
-}
-
 static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 {
 	Arrows* b = CreateEntity(&pState->entities, Arrows);
-#ifndef _SERVER
 	b->sound = LoopSound(g_transstate.assets, SOUND_Arrows, 0.75F, b);
 
 	ParticleCreationOptions* options = PushStruct(pState->world_arena, ParticleCreationOptions);
@@ -14,11 +8,12 @@ static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 	options->direction = V2(0, 1);
 	options->life = { 0.25F, 0.5F };
 	options->size = { 18, 18 };
-	options->speed = { 1, 5 };
-	options->spread = GetSetting(&pState->config, "arrow_radius")->f / 2.0F;
+	options->speed = { 10, 20 };
+	options->spread = 0;
+	options->spawn_radius = GetSetting(&pState->config, "arrow_radius")->f;;
 	b->system = SpawnParticleSystem(100, 300, BITMAP_Arrow, options);
 	b->system.position = pEvent->position;
-#endif
+
 	b->life = GetSetting(&pState->config, "arrow_duration")->f;
 	b->position = pEvent->position;
 
@@ -38,15 +33,11 @@ void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
 		DamagePlayer(p);
 	}
 
-#ifndef _SERVER
-	UpdateParticleSystem(&system, pDeltatime, UpdateArrowParticles);
-#endif
+	UpdateParticleSystem(&system, pDeltatime, nullptr);
 	life -= pDeltatime;
 	if (life <= 0)
 	{
-#ifndef _SERVER
 		StopSound(sound);
-#endif
 		RemoveEntity(&pState->entities, this);
 	}
 }

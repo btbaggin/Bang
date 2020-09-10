@@ -119,7 +119,8 @@ struct Player : public Entity
 
 	//Local state
 	AnimatedBitmap bitmap;
-	bool flip; //TODO remove eventually?
+	bool flip;
+	bool highlight;
 	Timer invuln_timer;
 	bool death_message_sent;
 

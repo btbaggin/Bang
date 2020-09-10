@@ -47,35 +47,3 @@ static void UpdateParalaxBitmap(ParalaxBitmap* pBitmap, float pDeltaTime, float 
 		}
 	}
 }
-
-
-static AnimatedBitmap CreateAnimatedBitmap(BITMAPS pBitmap, u32 pAnimationCount, u32* pAnimationLengths, v2 pFrameSize)
-{
-	AnimatedBitmap bitmap;
-	bitmap.bitmap = pBitmap;
-	bitmap.animation_count = pAnimationCount;
-	bitmap.current_animation = 0;
-	bitmap.current_index = 0;
-	bitmap.frame_size = pFrameSize;
-	bitmap.animation_lengths = pAnimationLengths;
-	bitmap.frame_time = 0;
-	return bitmap;
-}
-
-static void UpdateAnimation(AnimatedBitmap* pBitmap, float pDeltaTime)
-{
-	if ((pBitmap->frame_time += pDeltaTime) >= pBitmap->frame_duration)
-	{
-		pBitmap->frame_time = 0;
-		pBitmap->current_index++;
-		if (pBitmap->current_index >= *(pBitmap->animation_lengths + pBitmap->current_animation))
-		{
-			pBitmap->current_index = 0;
-		}
-	}
-}
-
-static bool AnimationIsComplete(AnimatedBitmap* pBitmap)
-{
-	return pBitmap->current_index == pBitmap->animation_lengths[pBitmap->current_animation] - 1;
-}

@@ -37,6 +37,7 @@ enum INPUT_ACTIONS
 	INPUT_MoveUp,
 	INPUT_MoveDown,
 	INPUT_Shoot,
+	INPUT_Beer,
 };
 
 

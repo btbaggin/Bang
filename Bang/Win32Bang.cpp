@@ -1,12 +1,10 @@
 /*
 TODO:
-	Allow using beers
+	EvictOldestAsset
 
 CLEANUP:
 	Player hurt animation thingy
-	Outline player when you can attack?
 	Do initial server connection on background thread
-	Arrows look like garbage
 
 BUGS:
 */
