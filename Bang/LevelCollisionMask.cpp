@@ -168,9 +168,8 @@ static void GetLevelCollisionMask(cute_tiled_map_t* pMap, cute_tiled_layer_t* pL
 				o.entity = e;
 				o.type = SHAPE_Poly;
 
-				AddRigidBody(g_state.world_arena, &g_state.physics, &o);
+				AddRigidBody(g_state.world_arena, &g_state.physics, e, &o);
 			}
-			//AddRigidBody();
 		}
 	}
 }

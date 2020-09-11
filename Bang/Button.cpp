@@ -26,12 +26,13 @@ static void RenderButton(RenderState* pState, Button* pButton, v2 pPosition)
 	v2 pos = GetMousePosition() - pPosition;
 	if (pos.X > 0 && pos.Y > 0 && pos < pButton->size)
 	{
+		//Mouse over color is slightly darker
 		v4 highlight = pButton->color;
-		highlight.R = min(highlight.R + 0.2F, 1);
-		highlight.G = min(highlight.G + 0.2F, 1);
-		highlight.B = min(highlight.B + 0.2F, 1);
-		highlight.A = min(highlight.A + 0.2F, 1);
-		PushSizedQuad(pState, pPosition - V2(5), pButton->size + V2(10), highlight);
+		highlight.R = max(highlight.R - 0.2F, 0);
+		highlight.G = max(highlight.G - 0.2F, 0);
+		highlight.B = max(highlight.B - 0.2F, 0);
+		highlight.A = max(highlight.A - 0.2F, 0);
+		PushSizedQuad(pState, pPosition - V2(3), pButton->size + V2(6), highlight);
 	}
 
 	if (pButton->bitmap != BITMAP_None)

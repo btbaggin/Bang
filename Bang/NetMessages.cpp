@@ -79,7 +79,7 @@ static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
 	u8 message = SERVER_MESSAGE_State;
 	Serialize(&buffer, &message, u8);
 
-	//Set positions of all entities
+	//Set bitmask of who is connected
 	u8 player_mask = 0;
 	for (u32 i = 0; i < MAX_PLAYERS; i++)
 	{
@@ -91,7 +91,7 @@ static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
 	}
 	Serialize(&buffer, &player_mask, u8);
 
-
+	//Send position and synced state to all players
 	for (u32 i = 0; i < MAX_PLAYERS; i++)
 	{
 		Client* client = pNet->clients + i;
@@ -106,10 +106,13 @@ static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
 	u8* buffer_save = buffer;
 	for (u32 i = 0; i < MAX_PLAYERS; i++)
 	{
+		//Save where we are in the buffer
 		buffer = buffer_save;
 		Client* client = pNet->clients + i;
 		if (IsClientConnected(client))
 		{
+	u32 size = 0;
+			//Send local state only to the respective player
 			Player* p = pState->players[i];
 			Serialize(&buffer, &p->local_state, LocalPlayerState);
 			Serialize(&buffer, &client->current_prediction_id, u32);

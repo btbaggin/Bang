@@ -15,7 +15,8 @@ static JOIN_STATUS_CODES AttemptJoinServer(GameNetState* pState, const char* pNa
 
 	//Wait until we recieve a response
 	u32 tries = 0;
-	while (!SocketReceive(&pState->send_socket, pState->buffer, SOCKET_BUFFER_SIZE, 0, nullptr) && tries++ < MAX_TRIES)
+	IPEndpoint endpoint;
+	while (!SocketReceive(&pState->send_socket, pState->buffer, SOCKET_BUFFER_SIZE, &size, &endpoint) && tries++ < MAX_TRIES)
 	{
 		Sleep(50);
 	}
@@ -158,13 +159,13 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 				if (g_state.game_started)
 				{
 					Player* p = g_state.players[l.client_id];
-					RemoveEntity(&g_state.entities, p);
-					RemoveRigidBody(p, &g_state.physics);
+					DestroyEntity(&g_state.entities, p);
 				}
 				break;
 			}
 		}
 
+		//Send ping to server so it knows if we disconnect
 		if (TickTimer(&ping_timer, pDeltaTime))
 		{
 			Ping p = {};
@@ -174,6 +175,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			SocketSend(&pState->send_socket, pState->server_ip, pState->buffer, size);
 		}
 
+		//We should recieve state packets constantly, if we havent recieved any, connection to the host is lost
 		if (g_state.game_started)
 		{
 			Client* c = pState->clients + pState->client_id;

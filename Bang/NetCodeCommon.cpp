@@ -97,8 +97,8 @@ static void NetEnd(GameNetState* pState)
 
 static bool SocketReceive(PlatformSocket* pSocket, u8* pBuffer, u32 pBufferSize, u32* pOutSize, IPEndpoint* pFrom)
 {
-	// get input packet from player
 	SOCKADDR_IN from;
+	//Get input packet
 	int from_size = sizeof(from);
 	int bytes_received = recvfrom(pSocket->handle, (char*)pBuffer, pBufferSize, 0, (SOCKADDR*)&from, &from_size);
 
@@ -112,14 +112,11 @@ static bool SocketReceive(PlatformSocket* pSocket, u8* pBuffer, u32 pBufferSize,
 		return false;
 	}
 
-	if(pOutSize) *pOutSize = bytes_received;
+	*pOutSize = bytes_received;
 
-	if (pFrom)
-	{
-		*pFrom = {};
-		pFrom->ip = ntohl(from.sin_addr.S_un.S_addr);
-		pFrom->port = ntohs(from.sin_port);
-	}
+	*pFrom = {};
+	pFrom->ip = ntohl(from.sin_addr.S_un.S_addr);
+	pFrom->port = ntohs(from.sin_port);
 
 	return true;
 }

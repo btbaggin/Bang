@@ -101,7 +101,7 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	o.material.dynamic_friction = 0.2F;
 	o.material.static_friction = 0.1F;
 
-	p->body = AddRigidBody(pState->world_arena, &pState->physics, &o);
+	AddRigidBody(pState->world_arena, &pState->physics, p, &o);
 
 	u32* lengths = PushArray(pState->world_arena, u32, 6);
 	lengths[0] = 6; lengths[1] = 4; lengths[2] = 6;
@@ -273,9 +273,11 @@ void Player::Render(RenderState* pState)
 		const v2 size = V2(g_state.map->tile_size.Width * 0.8F, g_state.map->tile_size.Height);
 		color = team_colors[team];
 		//Player
-		PushEllipse(pState, position + V2(g_state.map->tile_size.Width / 2, g_state.map->tile_size.Height), V2(g_state.map->tile_size.Width / 3, g_state.map->tile_size.Height / 6), V4(0, 0, 0, 0.2F));
+		PushEllipse(pState, position + V2(g_state.map->tile_size.Width / 2, g_state.map->tile_size.Height), V2(g_state.map->tile_size.Width / 3, g_state.map->tile_size.Height / 6), SHADOW_COLOR);
 		if (highlight)
 		{
+			//Better way to outline https://learnopengl.com/Advanced-OpenGL/Stencil-testing
+			//I could use this if I ended up outlining more things. Would need to store a matrix on Renderable_Quad instead of chaging the vertices directly
 			RenderAnimation(pState, position - V2(3), size + V2(6), V4(1, 0, 0, 1), &bitmap);
 			highlight = false;
 		}

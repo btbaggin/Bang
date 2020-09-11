@@ -177,23 +177,6 @@ static Assets* LoadAssets(MemoryStack* pStack, u64 pSize)
 	AddBitmapAsset(assets, BITMAP_Beer, "..\\..\\Resources\\beer.png");
 	AddBitmapAsset(assets, BITMAP_Dust, "..\\..\\Resources\\dust.png");
 	AddBitmapAsset(assets, BITMAP_Arrow, "..\\..\\Resources\\arrow.png");
-	/*PackedTexture* text = new PackedTexture();
-	text->textures[0] = { BITMAP_Error, "error.png" };
-	text->textures[1] = { BITMAP_Question, "question.png" };
-	text->textures[2] = { BITMAP_ArrowUp, "arrow_up.png" };
-	text->textures[3] = { BITMAP_ArrowDown, "arrow_down.png" };
-	text->textures[4] = { BITMAP_ButtonA, "button_a.png" };
-	text->textures[5] = { BITMAP_ButtonB, "button_b.png" };
-	text->textures[6] = { BITMAP_ButtonX, "button_x.png" };
-	text->textures[7] = { BITMAP_ButtonY, "button_y.png" };
-	text->textures[8] = { BITMAP_App, "apps.png" };
-	text->textures[9] = { BITMAP_Emulator, "emulator.png" };
-	text->textures[10] = { BITMAP_Recent, "recents.png" };
-	text->textures[11] = { BITMAP_Speaker, "speaker.png" };
-	text->textures[12] = { BITMAP_Settings, "settings.png" };
-	text->config = ".\\Assets\\atlas.tex";
-	text->image = ".\\Assets\\packed.png";
-	LoadPackedTexture(assets, BITMAP_TexturePack, text);*/
 
 	//Put a 1px white texture so we get fully lit instead of only ambient lighting
 	u8 data[] = { 255, 255, 255, 255 };

@@ -77,7 +77,7 @@ static PlayingSound* PlaySound(Assets* pAssets, SOUNDS pSound, float pVolume = 1
 {
 	PlayingSound* p = GetAvailablePlayingSound();
 	Sound* sound = GetSound(pAssets, pSound);
-	if (!sound) p->sound = pSound;
+	p->sound = pSound;
 	p->loaded_sound = sound;
 
 	p->entity = pEntity;
@@ -95,7 +95,7 @@ static PlayingSound* LoopSound(Assets* pAssets, SOUNDS pSound, float pVolume = 1
 {
 	PlayingSound* p = GetAvailablePlayingSound();
 	Sound* sound = GetSound(pAssets, pSound);
-	if (!sound) p->sound = pSound;
+	p->sound = pSound;
 	p->loaded_sound = sound;
 
 	p->entity = pEntity;

@@ -6,10 +6,6 @@
 #include <ctype.h>  // isspace
 #include <WinUser.h>
 
-
-
-
-
 // define the functions we need
 void layout_func(StbTexteditRow *row, STB_TEXTEDIT_STRING *str, int start_i)
 {

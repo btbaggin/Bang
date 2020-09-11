@@ -3,7 +3,7 @@
 #pragma comment(lib, "ws2_32")
 
 //https://www.codersblock.org/blog/multiplayer-fps-part-3
-const float CLIENT_TIMEOUT = 150.0F;
+const float CLIENT_TIMEOUT = 15.0F;
 const u32 SOCKET_BUFFER_SIZE = 1024;
 const u32 PORT = 11000;
 const u32 MAX_PREDICTION_BUFFER = 128; //128 is just over 2 seconds for latency assuming 60fps

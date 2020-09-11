@@ -7,6 +7,7 @@
 
 
 static const v4 COLOR_BLACK = V4(0, 0, 0, 1);
+static const v4 SHADOW_COLOR = V4(0, 0, 0, 0.1F);
 
 const s32 MAX_MODALS = 2;
 enum MODAL_RESULTS
@@ -74,7 +75,6 @@ struct Textbox : public UiElement
 	float font_x;
 	STB_TexteditState state;
 };
-
 
 struct Interface;
 struct Screen

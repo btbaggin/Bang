@@ -87,3 +87,4 @@ struct PhysicsScene
 };
 
 void SetOrient(Shape* pShape, float radians);
+static void RemoveRigidBody(Entity* pBody, PhysicsScene* pScene);

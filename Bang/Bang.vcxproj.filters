@@ -107,9 +107,6 @@
     <ClCompile Include="Player.cpp">
       <Filter>Entities</Filter>
     </ClCompile>
-    <ClCompile Include="Modal.cpp">
-      <Filter>Interface</Filter>
-    </ClCompile>
     <ClCompile Include="Interface.cpp">
       <Filter>Interface</Filter>
     </ClCompile>

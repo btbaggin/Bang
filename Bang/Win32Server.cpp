@@ -274,8 +274,7 @@ int main()
 				if (g_state.game_started)
 				{
 					Player* p = g_state.players[l.client_id];
-					RemoveEntity(&g_state.entities, p);
-					RemoveRigidBody(p, &g_state.physics);
+					DestroyEntity(&g_state.entities, p);
 				}
 
 				u32 size = WriteMessage(g_net.buffer, &l, ClientLeave, SERVER_MESSAGE_LeaveAnnoucement);

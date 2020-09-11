@@ -447,33 +447,32 @@ void StepPhysics(PhysicsScene* pScene, float pDeltaTime)
 	}
 }
 
-static RigidBody* AddRigidBody(MemoryStack* pStack, PhysicsScene* pScene, RigidBodyCreationOptions* pOptions)
+static void AddRigidBody(MemoryStack* pStack, PhysicsScene* pScene, Entity* pEntity, RigidBodyCreationOptions* pOptions)
 {
-	RigidBody* body = PushZerodStruct(pStack, RigidBody);
-	body->entity = pOptions->entity;
-	body->orient = 0;
-	body->static_friction = pOptions->material.static_friction;
-	body->dynamic_friction = pOptions->material.dynamic_friction;
-	body->restitution = pOptions->material.restitution;
+	pEntity->body = PushZerodStruct(pStack, RigidBody);
+	pEntity->body->entity = pOptions->entity;
+	pEntity->body->orient = 0;
+	pEntity->body->static_friction = pOptions->material.static_friction;
+	pEntity->body->dynamic_friction = pOptions->material.dynamic_friction;
+	pEntity->body->restitution = pOptions->material.restitution;
 
 
 	Shape* shape = nullptr;
 	switch (pOptions->type)
 	{
 	case SHAPE_Circle:
-		shape = CreateCircle(pStack, body, pOptions->radius, pOptions->density);
+		shape = CreateCircle(pStack, pEntity->body, pOptions->radius, pOptions->density);
 		break;
 	case SHAPE_Poly:
-		shape = CreatePolygon(pStack, body, pOptions->width, pOptions->height, pOptions->offset, pOptions->density);
+		shape = CreatePolygon(pStack, pEntity->body, pOptions->width, pOptions->height, pOptions->offset, pOptions->density);
 		break;
 	default:
 		assert(false);
 	}
 	shape->type = pOptions->type;
-	body->shape = shape;
+	pEntity->body->shape = shape;
 
-	pScene->bodies.push_back(body);
-	return body;
+	pScene->bodies.push_back(pEntity->body);
 }
 
 static void RemoveRigidBody(Entity* pBody, PhysicsScene* pScene)

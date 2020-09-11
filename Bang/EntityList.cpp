@@ -91,3 +91,9 @@ static u32 FindEntitiesWithinRange(EntityList* pList, v2 pPosition, float pRange
 
 	return count;
 }
+
+static void DestroyEntity(EntityList* pList, Entity* pEntity)
+{
+	RemoveEntity(pList, pEntity);
+	if (pEntity->body) RemoveRigidBody(pEntity, &g_state.physics);
+}
