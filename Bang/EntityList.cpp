@@ -92,6 +92,20 @@ static u32 FindEntitiesWithinRange(EntityList* pList, v2 pPosition, float pRange
 	return count;
 }
 
+static Entity* GetEntityUnderMouse(EntityList* pList, v2 pMouse)
+{
+	for (u32 i = 0; i < pList->end_index; i++)
+	{
+		Entity* e = pList->entities[i];
+		if (IsEntityValid(&g_state.entities, e) && IsPointInside(e->position, e->scale, pMouse))
+		{
+			return e;
+		}
+	}
+
+	return nullptr;
+}
+
 static void DestroyEntity(EntityList* pList, Entity* pEntity)
 {
 	RemoveEntity(pList, pEntity);

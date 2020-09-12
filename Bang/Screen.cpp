@@ -186,6 +186,7 @@ void GameScreen::Update(GameState* pState, Interface* pInterface, float pDeltaTi
 		if (IsKeyDown(KEY_Down)) flags |= 1 << INPUT_MoveDown;
 		if (IsKeyPressed(KEY_Space)) flags |= 1 << INPUT_Shoot;
 		if (IsKeyPressed(KEY_B)) flags |= 1 << INPUT_Beer;
+		if (IsButtonPressed(BUTTON_Left)) flags |= 1 << INPUT_Interact;
 
 		Client* c = g_net.clients + g_net.client_id;
 		Player* p = g_state.players[g_net.client_id];
@@ -197,18 +198,19 @@ void GameScreen::Update(GameState* pState, Interface* pInterface, float pDeltaTi
 			i.client_id = g_net.client_id;
 			i.prediction_id = pPredictionId;
 			i.dt = pDeltaTime;
-			i.flags = flags;
+			i.input.flags = flags;
+			i.input.mouse = ToWorldSpace(&pState->camera, GetMousePosition());
 			u32 size = WriteMessage(g_net.buffer, &i, ClientInput, CLIENT_MESSAGE_Input);
 			SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
 
-			p->Update(pState, pDeltaTime, flags);
+			p->Update(pState, pDeltaTime, i.input);
 			
 			u32 index = pPredictionId & PREDICTION_BUFFER_MASK;
 			PredictedMove* move = &g_net.moves[index];
 			PredictedMoveResult* result = &g_net.results[index];
 
 			move->dt = pDeltaTime;
-			move->input = flags;
+			move->input = i.input;
 			result->position = p->position;
 			result->state = p->local_state;
 		}

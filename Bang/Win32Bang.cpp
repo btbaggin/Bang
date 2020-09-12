@@ -447,12 +447,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 		//Update all entities, player will be handled specially in the screen update since
 		//its synced with the server
+		CurrentInput input = {};
 		for (u32 i = 0; i < g_state.entities.end_index; i++)
 		{
 			Entity* e = g_state.entities.entities[i];
 			if (IsEntityValid(&g_state.entities, e) && e->type != ENTITY_TYPE_Player)
 			{
-				e->Update(&g_state, time.delta_time, 0);
+				e->Update(&g_state, time.delta_time, input);
 			}
 		}
 

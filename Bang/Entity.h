@@ -1,6 +1,7 @@
 #pragma once
 const u32 MAX_ENTITIES = 1024;
 const u32 MAX_BEERS = 3;
+const u32 MAX_DYNAMITE = 20;
 
 enum PLAYER_ROLES : u8
 {
@@ -44,6 +45,7 @@ struct RigidBody;
 struct Entity
 {
 	v2 position;
+	v2 scale;
 	RigidBody* body;
 
 	EntityIndex index = {};
@@ -52,7 +54,7 @@ struct Entity
 #ifndef _SERVER
 	virtual void Render(RenderState* pState) = 0;
 #endif
-	virtual void Update(GameState* pState, float pDeltaTime, u32 pInputFlags) = 0;
+	virtual void Update(GameState* pState, float pDeltaTime, CurrentInput pInput) = 0;
 };
 
 struct EntityList
@@ -133,13 +135,13 @@ struct Player : public Entity
 
 	PlayingSound* walking;
 
-	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
+	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
 	void Render(RenderState* pState);
 };
 
 struct Wall : public Entity 
 { 
-	void Update(GameState* pState, float pDeltatime, u32 pInputFlags) { }
+	void Update(GameState* pState, float pDeltatime, CurrentInput pInput) { }
 	void Render(RenderState* pState) { }
 };
 
@@ -148,7 +150,7 @@ struct Beer : public Entity
 	bool up;
 	float life;
 	v2 original_pos;
-	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
+	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
 	void Render(RenderState* pState);
 };
 
@@ -157,7 +159,13 @@ struct Arrows : public Entity
 	PlayingSound* sound;
 	ParticleSystem system;
 	float life;
-	void Update(GameState* pState, float pDeltatime, u32 pInputFlags);
+	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
+	void Render(RenderState* pState);
+};
+
+struct Dynamite : public Entity
+{
+	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
 	void Render(RenderState* pState);
 };
 

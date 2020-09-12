@@ -37,27 +37,6 @@ static void HealPlayer(Player* pPlayer)
 	if (pPlayer->state.health > max_health) pPlayer->state.health = max_health;
 }
 
-static Player* FindPlayersWithinAttackRange(GameState* pState, Player* pPlayer, PLAYER_TEAMS pTeam)
-{
-	u32 range = GetSetting(&pState->config, "player_attack_range")->i;
-	Entity* entities[20];
-	u32 count = FindEntitiesWithinRange(&pState->entities, pPlayer->position, (float)range, entities, 20, ENTITY_TYPE_Player);
-
-	float min = FLT_MAX;
-	Player* closest = nullptr;
-	for (u32 i = 0; i < count; i++)
-	{
-		Player* p = (Player*)entities[i];
-		if (p != pPlayer && HMM_LengthSquared(pPlayer->position - p->position) < min)
-		{
-			closest = p;
-			min = HMM_LengthSquared(pPlayer->position - p->position);
-		}
-	}
-
-	return closest;
-}
-
 PARTICLE_UPDATE(UpdateDustParticles)
 {
 	pParticle->size -= pDeltaTime * 2;
@@ -69,6 +48,7 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 {
 	Player* p = CreateEntity(&pState->entities, Player);
 	p->position = V2((float)Random(0, pState->map->width), (float)Random(0, pState->map->height));
+	p->scale = V2(g_state.map->tile_size.Width * 0.8F, g_state.map->tile_size.Height);
 	strcpy(p->name, pName);
 	p->state.team_attack_choice = ATTACK_ON_CD;
 	p->death_message_sent = false;
@@ -112,35 +92,35 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	return p;
 }
 
-void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
+void Player::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 {
 	if (state.health > 0)
 	{
 		float speed = GetSetting(&g_state.config, "player_speed")->f * pState->map->tile_size.Width;
-		Player* attackee = FindPlayersWithinAttackRange(pState, this, (PLAYER_TEAMS)state.team_attack_choice);
-		if (attackee) attackee->highlight = true;
+		Entity* interact = GetEntityUnderMouse(&pState->entities, pInput.mouse);
+		if (interact && interact->type == ENTITY_TYPE_Player) ((Player*)interact)->highlight = true;
 
 		bool attacking = false;
 		v2 velocity = {};
-		if (HasFlag(1 << INPUT_MoveLeft, pInputFlags))
+		if (HasFlag(1 << INPUT_MoveLeft, pInput.flags))
 		{
 			flip = true;
 			velocity.X -= speed * pDeltaTime;
 		}
-		if (HasFlag(1 << INPUT_MoveRight, pInputFlags))
+		if (HasFlag(1 << INPUT_MoveRight, pInput.flags))
 		{
 			flip = false;
 			velocity.X += speed * pDeltaTime;
 		}
-		if (HasFlag(1 << INPUT_MoveUp, pInputFlags))
+		if (HasFlag(1 << INPUT_MoveUp, pInput.flags))
 		{
 			velocity.Y -= speed * pDeltaTime;
 		}
-		if (HasFlag(1 << INPUT_MoveDown, pInputFlags))
+		if (HasFlag(1 << INPUT_MoveDown, pInput.flags))
 		{
 			velocity.Y += speed * pDeltaTime;
 		}
-		if (HasFlag(1 << INPUT_Shoot, pInputFlags) && bitmap.current_animation != PLAYER_ANIMATION_AttackRight && bitmap.current_animation != PLAYER_ANIMATION_AttackLeft)
+		if (HasFlag(1 << INPUT_Shoot, pInput.flags))
 		{
 			if (state.team_attack_choice == ATTACK_ON_CD)
 			{
@@ -148,19 +128,40 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 				state.team_attack_choice = ATTACK_ROLLING;
 				ResetTimer(&attack_choose_timer, time);
 			}
-			else if (state.team_attack_choice >= 0 && attackee && attackee->team == state.team_attack_choice)
+		}
+		else if (HasFlag(1 << INPUT_Interact, pInput.flags) && interact)
+		{
+			switch (interact->type)
 			{
-				PlaySound(g_transstate.assets, SOUND_Sword, 1.0F, this);
-				DamagePlayer(attackee);
-				attacking = true;
-				state.team_attack_choice = ATTACK_ON_CD;
+			case ENTITY_TYPE_Beer:
+				if (local_state.beers < MAX_BEERS)
+				{
+					if (interact && HMM_LengthSquared(interact->position - position) < 32 * 32)
+					{
+						local_state.beers++;
+						RemoveEntity(&pState->entities, interact);
+					}
+				}
+				break;
+
+			case ENTITY_TYPE_Player:
+				Player* p = (Player*)interact;
+				u32 range = GetSetting(&pState->config, "player_attack_range")->i;
+				if (p != this && p->team == state.team_attack_choice && HMM_LengthSquared(p->position - position) < range * range)
+				{
+					PlaySound(g_transstate.assets, SOUND_Sword, 1.0F, this);
+					DamagePlayer(p);
+					attacking = true;
+					state.team_attack_choice = ATTACK_ON_CD;
+				}
+				break;
 			}
 		}
-		else if (HasFlag(1 << INPUT_Beer, pInputFlags))
+		else if (HasFlag(1 << INPUT_Beer, pInput.flags) && interact)
 		{
-			if (attackee)
+			if(interact->type == ENTITY_TYPE_Player)
 			{
-				HealPlayer(attackee);
+				HealPlayer((Player*)interact);
 			}
 		}
 
@@ -206,17 +207,6 @@ void Player::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
 		//Invulnerability after being attacked
 		if (TickTimer(&invuln_timer, pDeltaTime)) StopTimer(&invuln_timer);
 
-		if (local_state.beers < MAX_BEERS)
-		{
-			Entity* entities[10];
-			u32 count = FindEntitiesWithinRange(&pState->entities, position, 32.0F, entities, 10, ENTITY_TYPE_Beer);
-			if (count > 0)
-			{
-				local_state.beers++;
-				RemoveEntity(&pState->entities, entities[0]);
-			}
-		}
-
 		position += velocity;
 		position.X = clamp(0.0F, position.X, (float)g_state.map->width);
 		position.Y = clamp(0.0F, position.Y, (float)g_state.map->height);
@@ -229,7 +219,7 @@ void Player::Render(RenderState* pState)
 	const float MARGIN = 5.0F;
 	const float HEADER_HEIGHT = g_state.map->tile_size.Height * 0.66F;
 	const float HEADER_WIDTH = g_state.map->tile_size.Width * 1.5F;
-	v2 pos = position - V2((HEADER_WIDTH - g_state.map->tile_size.Width) / 2.0F, HEADER_HEIGHT);
+	v2 pos = position - V2((HEADER_WIDTH - scale.Width) / 2.0F, HEADER_HEIGHT);
 
 	v4 color = V4(1);
 	switch (role)
@@ -269,19 +259,17 @@ void Player::Render(RenderState* pState)
 		PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH, HEADER_HEIGHT * 0.5F), V4(1, 0, 0, 1));
 		PushSizedQuad(pState, pos + V2(0, GetFontSize(FONT_Normal)), V2(HEADER_WIDTH * (state.health / (float)max_health), HEADER_HEIGHT * 0.5F), V4(0, 1, 0, 1));
 
-
-		const v2 size = V2(g_state.map->tile_size.Width * 0.8F, g_state.map->tile_size.Height);
 		color = team_colors[team];
 		//Player
-		PushEllipse(pState, position + V2(g_state.map->tile_size.Width / 2, g_state.map->tile_size.Height), V2(g_state.map->tile_size.Width / 3, g_state.map->tile_size.Height / 6), SHADOW_COLOR);
+		PushEllipse(pState, position + V2(scale.Width / 2, scale.Height), V2(scale.Width / 3, scale.Height / 6), SHADOW_COLOR);
 		if (highlight)
 		{
 			//Better way to outline https://learnopengl.com/Advanced-OpenGL/Stencil-testing
 			//I could use this if I ended up outlining more things. Would need to store a matrix on Renderable_Quad instead of chaging the vertices directly
-			RenderAnimation(pState, position - V2(3), size + V2(6), V4(1, 0, 0, 1), &bitmap);
+			RenderAnimation(pState, position - V2(3), scale + V2(6), V4(1, 0, 0, 1), &bitmap);
 			highlight = false;
 		}
-		RenderAnimation(pState, position, size, color, &bitmap);
+		RenderAnimation(pState, position, scale, color, &bitmap);
 	}
 
 	//SetZLayer(pState, Z_LAYER_Ui);

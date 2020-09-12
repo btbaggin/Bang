@@ -38,6 +38,7 @@ enum INPUT_ACTIONS
 	INPUT_MoveDown,
 	INPUT_Shoot,
 	INPUT_Beer,
+	INPUT_Interact,
 };
 
 
@@ -62,7 +63,7 @@ struct GameTime
 struct Camera
 {
 	v2 position;
-	float zoom;
+	v2 viewport;
 };
 
 struct Event;

@@ -118,7 +118,12 @@ struct Rect
 	s32 h;
 };
 
-bool isPointInside(Rect pRect, v2 pPoint) 
+static bool IsPointInside(Rect pRect, v2 pPoint) 
 { 
 	return pPoint.X >= pRect.x && pPoint.X < pRect.x + pRect.w && pPoint.Y >= pRect.y && pPoint.Y < pRect.y + pRect.h; 
+}
+
+static bool IsPointInside(v2 pPosition, v2 pScale, v2 pPoint)
+{
+	return pPoint.X >= pPosition.X && pPoint.X < pPosition.X + pScale.Width && pPoint.Y >= pPosition.Y && pPoint.Y < pPosition.Y + pScale.Height;
 }

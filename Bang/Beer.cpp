@@ -2,13 +2,14 @@ static Beer* CreateBeer(GameState* pState, SpawnBeerEvent* pEvent)
 {
 	Beer* b = CreateEntity(&pState->entities, Beer);
 	b->position = pEvent->position;
+	b->scale = g_state.map->tile_size;
 	b->original_pos = pEvent->position;
 	b->life = 20.0F;
 
 	return b;
 }
 
-void Beer::Update(GameState* pState, float pDeltaTime, u32 pInputFlags)
+void Beer::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 {
 	const float RANGE = 7.0F;
 	float min = original_pos.Y - RANGE / 2;
@@ -31,6 +32,6 @@ void Beer::Render(RenderState* pState)
 {
 	PushEllipse(pState, original_pos + V2(g_state.map->tile_size.Width / 2, g_state.map->tile_size.Height), V2(g_state.map->tile_size.Width / 3, g_state.map->tile_size.Height / 6), SHADOW_COLOR);
 
-	PushSizedQuad(pState, position, g_state.map->tile_size, GetBitmap(g_transstate.assets, BITMAP_Beer));
+	PushSizedQuad(pState, position, scale, GetBitmap(g_transstate.assets, BITMAP_Beer));
 }
 #endif

@@ -20,7 +20,7 @@ static Arrows* CreateArrow(GameState* pState, ArrowsEvent* pEvent)
 	return b;
 }
 
-void Arrows::Update(GameState* pState, float pDeltatime, u32 pInputFlags)
+void Arrows::Update(GameState* pState, float pDeltatime, CurrentInput pInput)
 {
 	float range = GetSetting(&pState->config, "arrow_radius")->f;
 

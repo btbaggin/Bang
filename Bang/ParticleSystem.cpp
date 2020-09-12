@@ -95,7 +95,7 @@ static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreati
 			b = a;
 			a = temp;
 		}
-		v2 offset = V2(b * pOptions->spawn_radius * cos(2 * HMM_PI * a / b), b * pOptions->spawn_radius * sin(2 * HMM_PI * a / b));
+		v2 offset = V2(b * pOptions->spawn_radius * cos(2 * (float)HMM_PI * a / b), b * pOptions->spawn_radius * sin(2 * (float)HMM_PI * a / b));
 		pParticle->position = pPosition + offset;
 	}
 	else

@@ -55,7 +55,7 @@ struct ClientInput : public ClientMessage
 	u32 prediction_id;
 	s8 attack_choice;
 	float dt;
-	u32 flags;
+	CurrentInput input;
 };
 
 #define WriteMessage(pBuffer, data, type, message) WriteStructMessage(pBuffer, data, sizeof(type), message)

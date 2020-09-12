@@ -350,11 +350,11 @@ int main()
 
 				client->current_prediction_id = i.prediction_id;
 				client->dt = i.dt;
-				client->input_flags = i.flags;
+				client->input = i.input;
 
 				Player* p = g_state.players[client_id];
 				if(i.attack_choice >= 0) p->state.team_attack_choice = i.attack_choice;
-				p->Update(&g_state, i.dt, i.flags);
+				p->Update(&g_state, i.dt, i.input);
 
 				if (p->state.health <= 0 && !p->death_message_sent)
 				{
@@ -388,13 +388,14 @@ int main()
 			}
 		}
 
+		CurrentInput input = {};
 		for (u32 i = 0; i < g_state.entities.end_index; i++)
 		{
 			//Players gaet updated when the client sends an input packet
 			Entity* e = g_state.entities.entities[i];
 			if (IsEntityValid(&g_state.entities, e) && e->type != ENTITY_TYPE_Player)
 			{
-				e->Update(&g_state, gametime.delta_time, 0);
+				e->Update(&g_state, gametime.delta_time, input);
 			}
 		}		
 

@@ -49,6 +49,11 @@ struct PlatformSocket
 };
 
 
+struct CurrentInput
+{
+	u32 flags;
+	v2 mouse;
+};
 struct SyncedPlayerState
 {
 	u8 animation;
@@ -67,7 +72,7 @@ struct LocalPlayerState
 struct PredictedMove
 {
 	float dt;
-	u32 input;
+	CurrentInput input;
 };
 struct PredictedMoveResult
 {
@@ -77,7 +82,7 @@ struct PredictedMoveResult
 
 struct Client
 {
-	u32 input_flags;
+	CurrentInput input;
 	float dt;
 	float time_since_last_packet;
 	char name[NAME_LENGTH];
