@@ -3,7 +3,7 @@
 
 static void LoadNextScreen()
 {
-	EndTemporaryMemory(g_state.screen_reset);
+	EndTemporaryMemory(g_state.game_reset);
 	ClearEntityList(&g_state.entities);
 	ClearAllSounds(&g_state, &g_transstate);
 

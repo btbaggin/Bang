@@ -53,6 +53,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			break;
 
 			case SERVER_MESSAGE_GameStartAnnoucement:
+				//Sync random number with server so we shouldnt have any desyncs from random events
 				ReadMessage(pState->buffer, s, GameStartAnnoucement);
 				srand(s.time);
 
@@ -71,7 +72,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 
 			case SERVER_MESSAGE_State:
 			{
-				GameStateMessage m = ReadCurrentGameState(pState, &g_state);
+				GameStateMessage m = ReadCurrentGameState(pState, &g_state, &g_transstate);
 
 				for (u32 i = 0; i < MAX_PLAYERS; i++)
 				{
@@ -160,6 +161,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 				{
 					Player* p = g_state.players[l.client_id];
 					DestroyEntity(&g_state.entities, p);
+					DestroyParticleSystem(&p->dust);
 				}
 				break;
 			}

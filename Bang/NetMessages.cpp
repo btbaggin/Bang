@@ -73,7 +73,7 @@ static void ReadStructMessage(u8* pBuffer, void* pStruct, u32 pSize)
 }
 
 #ifdef _SERVER
-static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
+static void SendCurrentGameState(GameNetState* pNet, GameState* pState, GameTransState* pTransState)
 {
 	u8* buffer = pNet->buffer;
 	u8 message = SERVER_MESSAGE_State;
@@ -116,14 +116,14 @@ static void SendCurrentGameState(GameNetState* pNet, GameState* pState)
 			Player* p = pState->players[i];
 			Serialize(&buffer, &p->local_state, LocalPlayerState);
 			Serialize(&buffer, &client->current_prediction_id, u32);
-			SerializeEvents(&buffer, &pState->events);
+			SerializeEvents(&buffer, &pTransState->events);
 			SocketSend(&pNet->listen_socket, client->endpoint, pNet->buffer, (u32)(buffer - pNet->buffer));
 		}
 	}
 
 }
 #else
-static GameStateMessage ReadCurrentGameState(GameNetState* pNet, GameState* pState)
+static GameStateMessage ReadCurrentGameState(GameNetState* pNet, GameState* pState, GameTransState* pTransState)
 {
 	GameStateMessage m = {};
 	u8* buffer = pNet->buffer;
@@ -144,7 +144,7 @@ static GameStateMessage ReadCurrentGameState(GameNetState* pNet, GameState* pSta
 	}
 	Deserialize(&buffer, &m.local_state, LocalPlayerState);
 	Deserialize(&buffer, &m.prediction_id, u32);
-	DeserializeEvents(&buffer, &pState->events);
+	DeserializeEvents(&buffer, &pTransState->events);
 
 	return m;
 }

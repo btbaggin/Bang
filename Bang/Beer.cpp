@@ -30,8 +30,9 @@ void Beer::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 #ifndef _SERVER
 void Beer::Render(RenderState* pState)
 {
-	PushEllipse(pState, original_pos + V2(g_state.map->tile_size.Width / 2, g_state.map->tile_size.Height), V2(g_state.map->tile_size.Width / 3, g_state.map->tile_size.Height / 6), SHADOW_COLOR);
+	PushEllipse(pState, original_pos + V2(scale.Width / 2, scale.Height), V2(scale.Width / 3, scale.Height / 6), SHADOW_COLOR);
 
 	PushSizedQuad(pState, position, scale, GetBitmap(g_transstate.assets, BITMAP_Beer));
+	//PushOutline(pState, 3);
 }
 #endif

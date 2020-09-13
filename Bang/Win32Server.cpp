@@ -137,7 +137,7 @@ int main()
 	g_state.world_arena = CreateMemoryStack(world_memory, world_size);
 	g_state.entities = GetEntityList(g_state.world_arena);
 	g_state.config = LoadConfigFile(CONFIG_FILE_LOCATION, g_state.world_arena);
-	g_state.screen_reset = BeginTemporaryMemory(g_state.world_arena);
+	g_state.game_reset = BeginTemporaryMemory(g_state.world_arena);
 
 	u32 trans_size = Megabytes(32);
 	void* trans_memory = VirtualAlloc(NULL, trans_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -177,13 +177,13 @@ int main()
 		{
 			if (TickTimer(&beer_timer, gametime.delta_time))
 			{
-				SpawnBeerEvent* e = PushGameEvent(&g_state.events, SpawnBeerEvent, GAME_EVENT_SpawnBeer);
+				SpawnBeerEvent* e = PushGameEvent(&g_transstate.events, SpawnBeerEvent, GAME_EVENT_SpawnBeer);
 				e->position = V2(Random(0.0F, (float)g_state.map->width), Random(0.0F, (float)g_state.map->height));
 			}
 
 			if (TickTimer(&arrow_timer, gametime.delta_time))
 			{
-				ArrowsEvent* e = PushGameEvent(&g_state.events, ArrowsEvent, GAME_EVENT_Arrows);
+				ArrowsEvent* e = PushGameEvent(&g_transstate.events, ArrowsEvent, GAME_EVENT_Arrows);
 				e->position = V2(Random(0.0F, (float)g_state.map->width), Random(0.0F, (float)g_state.map->height));
 			}
 		}
@@ -426,7 +426,7 @@ int main()
 
 		if (g_state.game_started)
 		{
-			SendCurrentGameState(&g_net, &g_state);
+			SendCurrentGameState(&g_net, &g_state, &g_transstate);
 
 			if (!client_connected)
 			{
@@ -434,9 +434,10 @@ int main()
 				g_state.game_started = false;
 				ClearEntityList(&g_state.entities);
 				g_state.physics.bodies.clear();
+				EndTemporaryMemory(g_state.game_reset);
 			}
 		}
-		ProcessEvents(&g_state, &g_state.events);
+		ProcessEvents(&g_state, &g_transstate.events);
 
 		ProcessTaskCallbacks(&g_state.callbacks);
 

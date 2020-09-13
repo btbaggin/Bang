@@ -38,7 +38,8 @@ void Arrows::Update(GameState* pState, float pDeltatime, CurrentInput pInput)
 	if (life <= 0)
 	{
 		StopSound(sound);
-		RemoveEntity(&pState->entities, this);
+		DestroyEntity(&pState->entities, this);
+		DestroyParticleSystem(&system);
 	}
 }
 

@@ -30,7 +30,12 @@ class GameStartModal : public ModalWindowContent
 	{
 		if (IsKeyPressed(KEY_Enter))
 		{
-			u8 ip_value[4];
+			if (!name.string || name.stringlen == 0)
+			{
+				DisplayErrorMessage("Name is required", ERROR_TYPE_Warning);
+				return MODAL_RESULT_None;
+			}
+				u8 ip_value[4];
 			if (!is_host)
 			{
 				for (u32 i = 0; i < ArrayCount(ip); i++) ip_value[i] = atoi(ip[i].string);
@@ -84,11 +89,6 @@ class GameStartModal : public ModalWindowContent
 		{
 			return (GetFontSize(FONT_Debug) + MARGIN) * 4;
 		}
-	}
-
-	WORK_QUEUE_CALLBACK(ConnectToServer)
-	{
-
 	}
 
 public:

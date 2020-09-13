@@ -10,6 +10,7 @@
 #ifdef _SERVER
 #define SpawnParticleSystem(...) {}
 #define UpdateParticleSystem(...)
+#define DestroyParticleSystem(...)
 #define LoopSound(...) nullptr
 #define PauseSound(...)
 #define StopSound(...)
@@ -43,7 +44,6 @@ enum ASSET_TYPES : u8
 
 enum BITMAPS : u8
 {
-	//Unpacked textures go here
 	BITMAP_None,
 	BITMAP_Title,
 	BITMAP_MainMenu1,
@@ -79,13 +79,6 @@ enum SOUNDS : u8
 	SOUND_COUNT
 };
 
-struct Task
-{
-	MemoryStack* arena;
-	TemporaryMemoryHandle reset;
-	bool is_used;
-};
-
 typedef void TaskCompleteCallback(void* pData);
 struct TaskCallback
 {
@@ -117,7 +110,6 @@ struct PlayingSound
 
 	PlayingSound* next;
 };
-
 
 struct FontInfo
 {
@@ -193,26 +185,6 @@ struct LoadAssetWork
 	TaskCallbackQueue* queue;
 	AssetSlot* slot;
 	char load_info[MAX_PATH];
-};
-
-struct PackedTextureEntry
-{
-	BITMAPS bitmap;
-	const char* file;
-};
-
-struct PackedTexture
-{
-	//PackedTextureEntry textures[BITMAP_COUNT - BITMAP_TexturePack - 1];
-
-	const char* image;
-	const char* config;
-};
-
-struct TextureAtlasWork
-{
-	Bitmap* bitmap;
-	PackedTexture* atlas;
 };
 
 struct wav_header_t

@@ -95,7 +95,7 @@ static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreati
 			b = a;
 			a = temp;
 		}
-		v2 offset = V2(b * pOptions->spawn_radius * cos(2 * (float)HMM_PI * a / b), b * pOptions->spawn_radius * sin(2 * (float)HMM_PI * a / b));
+		v2 offset = V2(b * pOptions->spawn_radius * cos(2 * PI * a / b), b * pOptions->spawn_radius * sin(2 * PI * a / b));
 		pParticle->position = pPosition + offset;
 	}
 	else
@@ -112,7 +112,7 @@ static void InitializeParticle(Particle* pParticle, v2 pPosition, ParticleCreati
 	v2 random_direction = {};
 	if (pOptions->spread != 0)
 	{
-		float phi = Random(0.0F, 2 * (float)HMM_PI);
+		float phi = Random(0.0F, 2 * PI);
 		float cosTheta = Random(-1.0F, 1.0F);
 		float u = Random();
 		float theta = acos(cosTheta);

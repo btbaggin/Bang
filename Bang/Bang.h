@@ -6,11 +6,12 @@
 #include "time.h"
 
 #include "typedefs.h"
-const u32 MAX_PLAYERS = 8;
-const u32 NAME_LENGTH = 20;
-const u32 THREAD_COUNT = 4;
-const u32 QUEUE_ENTRIES = 256;
-const u32 UPDATE_FREQUENCY = 60;
+static const u32 MAX_PLAYERS = 8;
+static const u32 NAME_LENGTH = 20;
+static const u32 THREAD_COUNT = 4;
+static const u32 QUEUE_ENTRIES = 256;
+static const u32 UPDATE_FREQUENCY = 60;
+static const u32 MAX_GAME_EVENTS = 32;
 float ExpectedSecondsPerFrame = 1.0F / UPDATE_FREQUENCY;
 
 #include "Timer.h"
@@ -64,10 +65,10 @@ struct Camera
 {
 	v2 position;
 	v2 viewport;
+	mat4 matrix;
 };
 
 struct Event;
-static const u32 MAX_GAME_EVENTS = 32;
 struct EventPipe
 {
 	StaticList<Event*, MAX_GAME_EVENTS> events;
@@ -77,7 +78,8 @@ struct Player;
 struct PlayingSound;
 struct GameState
 {
-	TemporaryMemoryHandle screen_reset;
+	//Used to reset memory back to a fresh start (changing screens or restarting server)
+	TemporaryMemoryHandle game_reset;
 
 	EntityList entities;
 
@@ -86,7 +88,6 @@ struct GameState
 	PhysicsScene physics;
 	Camera camera;
 	TiledMap* map;
-	EventPipe events;
 
 	MemoryStack* world_arena;
 
@@ -101,7 +102,10 @@ struct GameState
 	bool is_running;
 	bool game_started;
 
+#ifndef _SERVER
+	//Handle to the server process so we can shut it down
 	HANDLE server_handle;
+#endif
 };
 
 struct Assets;
@@ -112,11 +116,13 @@ struct GameTransState
 	RenderState* render_state;
 	PlatformWorkQueue* high_priority;
 	PlatformWorkQueue* low_priority;
-	Task tasks[4];
 	TaskCallbackQueue queue;
 
 	Assets* assets;
 	FreeList<PlayingSound*> available_sounds;
+
+	//Events generated from the server to be processed on this frame
+	EventPipe events;
 };
 
 struct GameSoundBuffer

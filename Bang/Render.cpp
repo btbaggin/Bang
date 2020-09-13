@@ -46,15 +46,15 @@ static GLProgram CreateProgram(GLuint pVertex, GLuint pFragment)
 	GLProgram prog;
 	prog.id = program_id;
 	prog.texture = glGetUniformLocation(program_id, "mainTex");
-	prog.mvp = glGetUniformLocation(program_id, "MVP");
+	prog.m = glGetUniformLocation(program_id, "M");
+	prog.vp = glGetUniformLocation(program_id, "VP");
 	prog.font = glGetUniformLocation(program_id, "font");
 	return prog;
 }
 
-static void InitializeRenderer(RenderState* pState)
+static void InitializeRenderer(RenderState* pState, MemoryStack* pStack, u64 pSize)
 {
-	void* render = malloc(Megabytes(6));
-	pState->arena = CreateMemoryStack(render, Megabytes(6));
+	pState->arena = CreateSubStack(pStack, pSize);
 	pState->index_count = 0;
 	pState->vertex_count = 0;
 	pState->vertices = CreateSubStack(pState->arena, Megabytes(4));
@@ -86,12 +86,21 @@ static void InitializeRenderer(RenderState* pState)
 	f_shader = LoadShader(PARTICLE_FRAGMENT_SHADER, GL_FRAGMENT_SHADER);
 	pState->particle_program = CreateProgram(v_shader, f_shader);
 
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+	v_shader = LoadShader(VERTEX_SHADER, GL_VERTEX_SHADER);
+	f_shader = LoadShader(FRAGMENT_HIGHLIGHT_SHADER, GL_FRAGMENT_SHADER);
+	pState->highlight_program = CreateProgram(v_shader, f_shader);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+	glStencilMask(0xFF);
 }
 
 static void BeginRenderPass(v2 pFormSize, RenderState* pState)
@@ -103,8 +112,8 @@ static void BeginRenderPass(v2 pFormSize, RenderState* pState)
 	pState->vertices->count = 0;
 	pState->indices->count = 0;
 
-	mat4 m = GetOrthoMatrix(&g_state.camera);
-	glUniformMatrix4fv(pState->program.mvp, 1, GL_FALSE, &m.Elements[0][0]);
+	mat4 m = g_state.camera.matrix;
+	glUniformMatrix4fv(pState->program.vp, 1, GL_FALSE, &m.Elements[0][0]);
 	pState->memory = BeginTemporaryMemory(pState->arena);
 }
 
@@ -116,7 +125,7 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 	case RENDER_GROUP_ENTRY_TYPE_Matrix:
 	{
 		Renderable_Matrix* m = (Renderable_Matrix*)address;
-		glUniformMatrix4fv(pState->program.mvp, 1, GL_FALSE, &m->matrix.Elements[0][0]);
+		glUniformMatrix4fv(pState->program.vp, 1, GL_FALSE, &m->matrix.Elements[0][0]);
 	}
 	break;
 
@@ -127,6 +136,7 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(pState->program.texture, 0);
 		glBindTexture(GL_TEXTURE_2D, vertices->texture);
+		glUniformMatrix4fv(pState->program.m, 1, GL_FALSE, &vertices->m.Elements[0][0]);
 
 		glDrawElementsBaseVertex(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)(vertices->first_index * sizeof(u16)), vertices->first_vertex);
 	}
@@ -139,6 +149,9 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(pState->program.texture, 0);
 		glBindTexture(GL_TEXTURE_2D, g_transstate.assets->blank_texture);
+
+		mat4 m = HMM_Mat4d(1.0F);
+		glUniformMatrix4fv(pState->program.m, 1, GL_FALSE, &m.Elements[0][0]);
 
 		glDrawArrays(GL_TRIANGLE_FAN, vertices->first_vertex, CIRCLE_FRAGMENTS);
 	}
@@ -158,6 +171,9 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(pState->program.texture, 0);
+
+		mat4 m = HMM_Mat4d(1.0F);
+		glUniformMatrix4fv(pState->program.m, 1, GL_FALSE, &m.Elements[0][0]);
 
 		if (HasFlag(text->flags, RENDER_TEXT_FLAG_Clip))
 		{
@@ -179,6 +195,9 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 		glUniform1i(pState->program.texture, 0);
 		glBindTexture(GL_TEXTURE_2D, g_transstate.assets->blank_texture);
 
+		mat4 m = HMM_Mat4d(1.0F);
+		glUniformMatrix4fv(pState->program.m, 1, GL_FALSE, &m.Elements[0][0]);
+
 		glLineWidth(line->size);
 		glDrawArrays(GL_LINES, line->first_vertex, 2);
 	}
@@ -194,8 +213,8 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 		glBindTexture(GL_TEXTURE_2D, sys->texture);
 		glUniform1i(pState->particle_program.texture, 0);
 
-		mat4 m = GetOrthoMatrix(&g_state.camera);
-		glUniformMatrix4fv(pState->particle_program.mvp, 1, GL_FALSE, &m.Elements[0][0]);
+		mat4 m = g_state.camera.matrix;
+		glUniformMatrix4fv(pState->particle_program.vp, 1, GL_FALSE, &m.Elements[0][0]);
 
 		//vertices
 		glEnableVertexAttribArray(0);
@@ -231,6 +250,41 @@ static void RenderRenderEntry(RenderState* pState, RenderEntry* pLastEntry, Rend
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, pState->index_count * sizeof(u16), MemoryAddress(pState->indices), GL_STATIC_DRAW);
 	}
 	break;
+
+	case RENDER_GROUP_ENTRY_TYPE_Outline:
+	{
+		Renderable_Outline* outline = (Renderable_Outline*)address;
+		assert(pLastEntry);
+
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);
+
+		float scale = 1.0F + outline->size * 0.1F;
+		switch (pLastEntry->type)
+		{
+		case RENDER_GROUP_ENTRY_TYPE_Quad:
+		{
+			Renderable_Quad* quad = (Renderable_Quad*)(pLastEntry + 1);
+			quad->m = quad->m * HMM_Scale(V3(scale, scale, 0));
+		}
+		break;
+		default:
+			assert(false); //Only quads are currently supported
+		}
+
+		mat4 m = g_state.camera.matrix;
+		glUseProgram(pState->highlight_program.id);
+		glUniformMatrix4fv(pState->highlight_program.vp, 1, GL_FALSE, &m.Elements[0][0]);
+		RenderRenderEntry(pState, nullptr, pLastEntry);
+		glUseProgram(pState->program.id);
+		glUniformMatrix4fv(pState->program.vp, 1, GL_FALSE, &m.Elements[0][0]);
+
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+		glEnable(GL_DEPTH_TEST);
+	}
+	break;
 	}
 }
 
@@ -249,9 +303,19 @@ static void EndRenderPass(v2 pFormSize, RenderState* pState)
 	for (u32 i = 0; i < pState->entry_count; i++)
 	{
 		RenderEntry* header = (RenderEntry*)address;
-		//address += sizeof(RenderEntry);
 
-		RenderRenderEntry(pState, (RenderEntry*)last_address, header);
+		if (((RenderEntry*)(address + sizeof(RenderEntry) + header->size))->type != RENDER_GROUP_ENTRY_TYPE_Outline)
+		{
+			RenderRenderEntry(pState, (RenderEntry*)last_address, header);
+		}
+		else
+		{
+			//If we are rendering an outline next we need to write the current object to the stencil buffer
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+			RenderRenderEntry(pState, (RenderEntry*)last_address, header);
+			glStencilMask(0x00);
+		}
 		
 		last_address = address;
 		address += sizeof(RenderEntry) + header->size;
@@ -291,7 +355,7 @@ static u32 BeginRenderToTexture(Bitmap* pBitmap, RenderState* pState)
 
 	BeginRenderPass(V2((float)pBitmap->width, (float)pBitmap->height), pState);
 	mat4 m = HMM_Orthographic(0.0F, (float)pBitmap->width, (float)pBitmap->height, 0.0F, -Z_LAYER_MAX * Z_INDEX_DEPTH, 10.0F);
-	glUniformMatrix4fv(pState->program.mvp, 1, GL_FALSE, &m.Elements[0][0]);
+	glUniformMatrix4fv(pState->program.vp, 1, GL_FALSE, &m.Elements[0][0]);
 
 	return buffer;
 }
@@ -412,10 +476,14 @@ static void PushQuad(RenderState* pState, v2 pMin, v2 pMax, v4 pColor, Bitmap* p
 	v2 uv_max = pTexture ? pTexture->uv_max : V2(1);
 
 	Vertex* vertices = PushArray(pState->vertices, Vertex, 4);
-	vertices[0] = { { pMin.X, pMin.Y, pState->z_index }, pColor, {uv_min.U, uv_min.V} };
-	vertices[1] = { { pMin.X, pMax.Y, pState->z_index }, pColor, {uv_min.U, uv_max.V} };
-	vertices[2] = { { pMax.X, pMax.Y, pState->z_index }, pColor, {uv_max.U, uv_max.V} };
-	vertices[3] = { { pMax.X, pMin.Y, pState->z_index }, pColor, {uv_max.U, uv_min.V} };
+	/*vertices[0] = { { 0, 0, 0 }, pColor, {uv_min.U, uv_min.V} };
+	vertices[1] = { { 0, 1, 0 }, pColor, {uv_min.U, uv_max.V} };
+	vertices[2] = { { 1, 1, 0 }, pColor, {uv_max.U, uv_max.V} };
+	vertices[3] = { { 1, 0, 0 }, pColor, {uv_max.U, uv_min.V} };*/
+	vertices[0] = { { -0.5F, -0.5F, 0 }, pColor, {uv_min.U, uv_min.V} };
+	vertices[1] = { { -0.5F, 0.5F, 0 }, pColor, {uv_min.U, uv_max.V} };
+	vertices[2] = { { 0.5F, 0.5F, 0 }, pColor, {uv_max.U, uv_max.V} };
+	vertices[3] = { { 0.5F, -0.5F, 0 }, pColor, {uv_max.U, uv_min.V} };
 
 	u16* indices = PushArray(pState->indices, u16, 6);
 	indices[0] = 0; indices[1] = 1; indices[2] = 2;
@@ -425,6 +493,10 @@ static void PushQuad(RenderState* pState, v2 pMin, v2 pMax, v4 pColor, Bitmap* p
 	m->first_vertex = pState->vertex_count;
 	m->first_index = pState->index_count;
 	m->texture = pTexture ? pTexture->texture : g_transstate.assets->blank_texture;
+
+	float width = pMax.X - pMin.X;
+	float height = pMax.Y - pMin.Y;
+	m->m = HMM_Translate(V3(pMin.X + width / 2, pMin.Y + height / 2, pState->z_index)) * HMM_Scale(V3(width, height, 0));
 
 	pState->vertex_count += 4;
 	pState->index_count += 6;
@@ -490,9 +562,9 @@ static void PushParticleSystem(RenderState* pState, ParticleSystem* pSystem)
 static void PushEllipse(RenderState* pState, v2 pCenter, v2 pRadius, v4 pColor)
 {
 	Vertex* vertices = PushArray(pState->vertices, Vertex, CIRCLE_FRAGMENTS);
-	float increment = 2.0F * (float)HMM_PI / CIRCLE_FRAGMENTS;
+	float increment = 2.0F * PI / CIRCLE_FRAGMENTS;
 
-	float currAngle = 0.0F;
+	float currAngle = 2.0F * PI;
 	for (u32 i = 0; i < CIRCLE_FRAGMENTS; i++)
 	{
 		Vertex* v = vertices + i;
@@ -500,7 +572,7 @@ static void PushEllipse(RenderState* pState, v2 pCenter, v2 pRadius, v4 pColor)
 		v->color = pColor;
 		v->uv = V2(0);
 
-		currAngle += increment;
+		currAngle -= increment;
 	}
 
 	Renderable_Ellipse* m = PushRenderGroupEntry(pState, Renderable_Ellipse, RENDER_GROUP_ENTRY_TYPE_Ellipse);
@@ -509,20 +581,21 @@ static void PushEllipse(RenderState* pState, v2 pCenter, v2 pRadius, v4 pColor)
 	pState->vertex_count += CIRCLE_FRAGMENTS;
 }
 
+static void PushOutline(RenderState* pState, float pSize)
+{
+	Renderable_Outline* m = PushRenderGroupEntry(pState, Renderable_Outline, RENDER_GROUP_ENTRY_TYPE_Outline);
+	m->size = pSize;
+}
+
 static inline void SetZLayer(RenderState* pState, Z_LAYERS pLayer)
 {
 	pState->z_index = pLayer * Z_INDEX_DEPTH;
-}
-static inline void SetZLayer(RenderState* pState, float pLayer)
-{
-	pState->z_index = pLayer;
 }
 
 static void RenderParalaxBitmap(RenderState* pState, Assets* pAssets, ParalaxBitmap* pBitmap, v2 pSize)
 {
 	for (u32 i = 0; i < pBitmap->layers; i++)
 	{
-		SetZLayer(pState, (float)i);
 		v2 pos = pBitmap->position[i];
 		Bitmap* bitmap = GetBitmap(pAssets, pBitmap->bitmaps[i]);
 		if (pos.X > 0)

@@ -30,19 +30,15 @@ static void UpdateCamera(GameState* pState, Entity* pCharacter)
 		
 	camera->position.X = clamp(0.0F, camera->position.X, (float)pState->map->width - camera->viewport.Width);
 	camera->position.Y = clamp(0.0F, camera->position.Y, (float)pState->map->height - camera->viewport.Height);
+	camera->matrix = HMM_Orthographic(camera->position.X,
+									  camera->position.X + camera->viewport.Width,
+									  camera->position.Y + camera->viewport.Height,
+									  camera->position.Y,
+									  -Z_LAYER_MAX * Z_INDEX_DEPTH, Z_LAYER_MAX * Z_INDEX_DEPTH);
 }
 
 static inline v2 ToWorldSpace(Camera* pCamera, v2 pPosition)
 {
 	v2 aspect = V2(pCamera->viewport.Width / g_state.form->width, pCamera->viewport.Height / g_state.form->height);
 	return pCamera->position + pPosition * aspect;
-}
-
-static inline mat4 GetOrthoMatrix(Camera* pCamera)
-{
-	return HMM_Orthographic(pCamera->position.X, 
-						    pCamera->position.X + pCamera->viewport.Width, 
-							pCamera->position.Y + pCamera->viewport.Height, 
-							pCamera->position.Y, 
-							-Z_LAYER_MAX * Z_INDEX_DEPTH, Z_LAYER_MAX * Z_INDEX_DEPTH);
 }

@@ -1,4 +1,5 @@
 #pragma once
+#define PI (float)HMM_PI
 
 static void GenerateRandomNumbersWithNoDuplicates(u32* pNumbers, u32 pCount)
 {

@@ -48,7 +48,7 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 {
 	Player* p = CreateEntity(&pState->entities, Player);
 	p->position = V2((float)Random(0, pState->map->width), (float)Random(0, pState->map->height));
-	p->scale = V2(g_state.map->tile_size.Width * 0.8F, g_state.map->tile_size.Height);
+	p->scale = V2(g_state.map->tile_size.Width * 0.625F, g_state.map->tile_size.Height);
 	strcpy(p->name, pName);
 	p->state.team_attack_choice = ATTACK_ON_CD;
 	p->death_message_sent = false;
@@ -98,7 +98,6 @@ void Player::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 	{
 		float speed = GetSetting(&g_state.config, "player_speed")->f * pState->map->tile_size.Width;
 		Entity* interact = GetEntityUnderMouse(&pState->entities, pInput.mouse);
-		if (interact && interact->type == ENTITY_TYPE_Player) ((Player*)interact)->highlight = true;
 
 		bool attacking = false;
 		v2 velocity = {};
@@ -262,17 +261,18 @@ void Player::Render(RenderState* pState)
 		color = team_colors[team];
 		//Player
 		PushEllipse(pState, position + V2(scale.Width / 2, scale.Height), V2(scale.Width / 3, scale.Height / 6), SHADOW_COLOR);
+		PushParticleSystem(pState, &dust);
+		RenderAnimation(pState, position, scale, color, &bitmap);
 		if (highlight)
 		{
 			//Better way to outline https://learnopengl.com/Advanced-OpenGL/Stencil-testing
 			//I could use this if I ended up outlining more things. Would need to store a matrix on Renderable_Quad instead of chaging the vertices directly
-			RenderAnimation(pState, position - V2(3), scale + V2(6), V4(1, 0, 0, 1), &bitmap);
+			//RenderAnimation(pState, position - V2(3), scale + V2(6), V4(1, 0, 0, 1), &bitmap);
 			highlight = false;
+			//PushOutline(pState, 3);
 		}
-		RenderAnimation(pState, position, scale, color, &bitmap);
 	}
 
 	//SetZLayer(pState, Z_LAYER_Ui);
-	PushParticleSystem(pState, &dust);
 }
 #endif

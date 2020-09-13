@@ -1,10 +1,9 @@
 /*
 TODO:
-	EvictOldestAsset
 
 CLEANUP:
-	Player hurt animation thingy
-	Do initial server connection on background thread
+	Outlines seem to lag behind when camera is moving? They are also kind of ugly
+	Make server hosting better
 
 BUGS:
 */
@@ -317,6 +316,8 @@ void Win32GetInput(GameInput* pInput, HWND pHandle)
 
 static void RenderGameElements(GameState* pState, RenderState* pRender)
 {
+	v2 mouse = ToWorldSpace(&pState->camera, GetMousePosition());
+	Entity* interact = GetEntityUnderMouse(&pState->entities, mouse);
 	g_interface.current_screen->Render(pRender, pState);
 
 	SetZLayer(pRender, Z_LAYER_Player);
@@ -326,6 +327,7 @@ static void RenderGameElements(GameState* pState, RenderState* pRender)
 		if (IsEntityValid(&pState->entities, e))
 		{
 			e->Render(pRender);
+			if (interact == e) PushOutline(pRender, 3);
 		}
 	}
 }
@@ -367,7 +369,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	g_state.world_arena = CreateMemoryStack(world_memory, world_size);
 	g_state.entities = GetEntityList(g_state.world_arena);
 	g_state.config = LoadConfigFile(CONFIG_FILE_LOCATION, g_state.world_arena);
-	g_state.screen_reset = BeginTemporaryMemory(g_state.world_arena);
+	g_state.game_reset = BeginTemporaryMemory(g_state.world_arena);
 
 	g_interface.current_screen = PushClass(g_state.world_arena, MainMenu);
 	g_interface.current_screen->Load(&g_state);
@@ -380,14 +382,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	g_transstate.render_state = new RenderState();
 
 	//Renderer init
-	InitializeRenderer(g_transstate.render_state);
+	InitializeRenderer(g_transstate.render_state, g_transstate.trans_arena, Megabytes(8));
 
 	//Audio init
 	win32_sound sound = Win32InitDirectSound(form.handle, 48000, 1, sizeof(s16) * 2);
 	sound.secondary_buffer->Play(0, 0, DSBPLAY_LOOPING);
 
 	//Asset init
-	LoadAssets(g_transstate.trans_arena, Megabytes(32));
+	LoadAssets(g_transstate.trans_arena, Megabytes(24));
 
 	//Input init
 	HINSTANCE xinput_dll;
@@ -469,7 +471,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		StepPhysics(&g_state.physics, ExpectedSecondsPerFrame);
 		
 		//Process any events generated from the server
-		ProcessEvents(&g_state, &g_state.events);
+		ProcessEvents(&g_state, &g_transstate.events);
 
 		//Process any callbacks from tasks (mainly used to upload assets to GPU since it must be done on the main thread)
 		ProcessTaskCallbacks(&g_state.callbacks);
@@ -477,7 +479,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		v2 size = V2(g_state.form->width, g_state.form->height);
 		BeginRenderPass(size, g_transstate.render_state);
 		glClearColor(0, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		RenderGameElements(&g_state, g_transstate.render_state);
 		DEBUG_RenderRigidBodies(g_transstate.render_state, &g_state.physics);

@@ -140,7 +140,7 @@ static Shape* CreateCircle(MemoryStack* pStack, RigidBody* pBody, float pRadius,
 {
 	Shape* s = PushStruct(pStack, Shape);
 	s->body = pBody;
-	s->body->mass = (float)HMM_PI * pRadius * pRadius * pDensity;
+	s->body->mass = PI * pRadius * pRadius * pDensity;
 	s->body->inverse_mass = (s->body->mass) ? 1.0f / s->body->mass : 0.0f;
 	s->body->inertia = s->body->mass * pRadius * pRadius;
 	s->body->inverse_inertia = (s->body->inertia) ? 1.0f / s->body->inertia : 0.0f;

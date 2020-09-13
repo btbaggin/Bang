@@ -22,6 +22,7 @@ enum RENDER_GROUP_ENTRY_TYPE : u8
 	RENDER_GROUP_ENTRY_TYPE_Ellipse,
 	RENDER_GROUP_ENTRY_TYPE_Matrix,
 	RENDER_GROUP_ENTRY_TYPE_ParticleSystem,
+	RENDER_GROUP_ENTRY_TYPE_Outline,
 };
 
 enum RENDER_TEXT_FLAGS : u8
@@ -47,6 +48,7 @@ struct Renderable_Quad
 	u32 first_index;
 	u32 first_vertex;
 	u32 texture;
+	mat4 m;
 };
 
 struct Renderable_Ellipse
@@ -75,6 +77,11 @@ struct Renderable_ParticleSystem
 	u32 PBO;
 };
 
+struct Renderable_Outline
+{
+	float size;
+};
+
 struct RenderEntry
 {
 	RENDER_GROUP_ENTRY_TYPE type;
@@ -97,7 +104,8 @@ struct GLProgram
 {
 	u32 id;
 	u32 texture;
-	u32 mvp;
+	u32 m;
+	u32 vp;
 	u32 font;
 };
 
@@ -113,6 +121,7 @@ struct RenderState
 
 	GLProgram program;
 	GLProgram particle_program;
+	GLProgram highlight_program;
 
 	MemoryStack* vertices;
 	u32 vertex_count;
