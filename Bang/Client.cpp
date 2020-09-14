@@ -28,7 +28,6 @@ static JOIN_STATUS_CODES AttemptJoinServer(GameNetState* pState, const char* pNa
 	return jr.result;
 }
 
-Timer ping_timer(5.0F);
 static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float pDeltaTime)
 {
 	u32 bytes_received;
@@ -96,6 +95,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 							u32 index = m.prediction_id & PREDICTION_BUFFER_MASK;
 							v2 delta_pos = received_position - pState->results[index].position;
 
+							//Check if our local sim mispredicted something 
 							if (HMM_LengthSquared(delta_pos) > 0.001f * 0.001f || SynedStateHasChanged(&received_state, &p->state))
 							{
 								LogInfo("error of(%f, %f) detected at prediction id %d, rewinding and replaying", delta_pos.X, delta_pos.Y, m.prediction_id);
@@ -104,6 +104,7 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 								p->body->velocity = received_local_state.velocity;;
 								p->state = received_state;
 
+								//Replay all moves from when the desync happened so the local sim should be synced again
 								for (u32 replaying_prediction_id = m.prediction_id + 1;
 									replaying_prediction_id < pPredictionId;
 									++replaying_prediction_id)
@@ -167,15 +168,6 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			}
 		}
 
-		//Send ping to server so it knows if we disconnect
-		if (TickTimer(&ping_timer, pDeltaTime))
-		{
-			Ping p = {};
-			p.client_id = pState->client_id;
-
-			u32 size = WriteMessage(pState->buffer, &p, Ping, CLIENT_MESSAGE_Ping);
-			SocketSend(&pState->send_socket, pState->server_ip, pState->buffer, size);
-		}
 
 		//We should recieve state packets constantly, if we havent recieved any, connection to the host is lost
 		if (g_state.game_started)
@@ -185,8 +177,21 @@ static void ProcessServerMessages(GameNetState* pState, u32 pPredictionId, float
 			if (c->time_since_last_packet > CLIENT_TIMEOUT)
 			{
 				DisplayErrorMessage("Unable to reach host", ERROR_TYPE_Warning);
-				EndScreen(0.0F);
+				EndScreen(0.0F); //TODO this needs to always go to main menu
 				g_state.physics.bodies.clear();
+			}
+		}
+		else
+		{
+			//Send ping to server so it knows if we disconnect
+			//We only need to do this during lobby since we have input messages during the game
+			if (TickTimer(&pState->ping_timer, pDeltaTime))
+			{
+				Ping p = {};
+				p.client_id = pState->client_id;
+
+				u32 size = WriteMessage(pState->buffer, &p, Ping, CLIENT_MESSAGE_Ping);
+				SocketSend(&pState->send_socket, pState->server_ip, pState->buffer, size);
 			}
 		}
 	}

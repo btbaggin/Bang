@@ -85,6 +85,7 @@ static void NetStart(GameNetState* pState, PlatformSocket* pSocket)
 	if (result == SOCKET_ERROR)
 	{
 		DisplayErrorMessage("ioctlsocket failed: %d", ERROR_TYPE_Error, WSAGetLastError());
+		return;
 	}
 	pState->initialized = true;
 }

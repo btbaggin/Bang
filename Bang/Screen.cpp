@@ -102,10 +102,24 @@ void LobbyScreen::Update(GameState* pState, Interface* pInterface, float pDeltaT
 		v2 pos = V2(pState->form->width - 10, pState->form->height - 10) - start_button.size;
 		if (IsClicked(&start_button, pos))
 		{
-			GameStart s = {};
-			s.client_id = g_net.client_id;
-			u32 size = WriteMessage(g_net.buffer, &s, GameStart, CLIENT_MESSAGE_GameStart);
-			SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
+			u32 count = 0;
+			for (u32 i = 0; i < MAX_PLAYERS; i++)
+			{
+				Client* c = g_net.clients + i;
+				if (IsClientConnected(c)) count++;
+			}
+
+			if (count >= 3 || ALLOW_PARTIAL_GAMES)
+			{
+				GameStart s = {};
+				s.client_id = g_net.client_id;
+				u32 size = WriteMessage(g_net.buffer, &s, GameStart, CLIENT_MESSAGE_GameStart);
+				SocketSend(&g_net.send_socket, g_net.server_ip, g_net.buffer, size);
+			}
+			else
+			{
+				DisplayErrorMessage("Must have at least 3 players to start a game", ERROR_TYPE_Warning);
+			}
 		}
 	}
 }
@@ -151,7 +165,7 @@ void GameScreen::Load(GameState* pState)
 {
 	pState->game_started = true;
 	pState->map = PushStruct(pState->world_arena, TiledMap);
-	LoadTiledMap(pState->map, "..\\..\\Resources\\level2.json", g_transstate.trans_arena);
+	LoadTiledMap(pState->map, "..\\..\\Resources\\level.json", g_transstate.trans_arena);
 
 	sound = LoopSound(g_transstate.assets, SOUND_Background, 0.5F);
 }

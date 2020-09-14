@@ -75,6 +75,9 @@ class GameStartModal : public ModalWindowContent
 
 	virtual void OnAccept() 
 	{ 
+#ifndef _SERVER
+		ResetTimer(&g_net.ping_timer, PING_TIME);
+#endif
 		strcpy(g_net.clients[g_net.client_id].name, name.string);
 		EndScreen(1.0F);
 	};

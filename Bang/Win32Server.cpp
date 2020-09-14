@@ -290,7 +290,7 @@ int main()
 				srand(t);
 
 				g_state.map = PushStruct(g_state.world_arena, TiledMap);
-				LoadTiledMap(g_state.map, "..\\..\\Resources\\level2.json", g_transstate.trans_arena);
+				LoadTiledMap(g_state.map, "..\\..\\Resources\\level.json", g_transstate.trans_arena);
 
 				//Get number of connected players
 				u32 players = 0;
@@ -351,6 +351,7 @@ int main()
 				client->current_prediction_id = i.prediction_id;
 				client->dt = i.dt;
 				client->input = i.input;
+				client->time_since_last_packet = 0;
 
 				Player* p = g_state.players[client_id];
 				if(i.attack_choice >= 0) p->state.team_attack_choice = i.attack_choice;

@@ -5,7 +5,7 @@ struct Pair {
 	Pair(int a, int b) : x(a), y(b) {}
 };
 
-static void update_cache(std::vector<int> *c, int n, int M, int rowWidth, const u8* input) {
+static void UpdateCache(std::vector<int> *c, int n, int M, int rowWidth, const u8* input) {
 	for (int m = 0; m != M; ++m) {
 		if (input[n * rowWidth + m] != 0) {
 			(*c)[m]++;
@@ -16,24 +16,24 @@ static void update_cache(std::vector<int> *c, int n, int M, int rowWidth, const 
 	}
 }
 
-static Rect findBiggest(const u8* input, int M, int N, int rowWidth) {
+static Rect FindBiggest(const u8* pInput, int pWidth, int pHeight, int pRowWidth) {
 
 	Pair best_ll(0, 0); /* Lower-left corner */
 	Pair best_ur(-1, -1); /* Upper-right corner */
 	int best_area = 0;
 	int best_perimeter = 0;
 
-	std::vector<int> c(M + 1, 0); /* Cache */
+	std::vector<int> c(pWidth + 1, 0); /* Cache */
 	std::vector<Pair> s; /* Stack */
-	s.reserve(M + 1);
+	s.reserve(pWidth + 1);
 
 	int m, n;
 
 	/* Main algorithm: */
-	for (n = 0; n != N; ++n) {
+	for (n = 0; n != pHeight; ++n) {
 		int open_width = 0;
-		update_cache(&c, n, M, rowWidth, input);
-		for (m = 0; m != M + 1; ++m) {
+		UpdateCache(&c, n, pWidth, pRowWidth, pInput);
+		for (m = 0; m != pWidth + 1; ++m) {
 			if (c[m] > open_width) { /* Open new rectangle? */
 				s.push_back(Pair(m, open_width));
 				open_width = c[m];
@@ -68,8 +68,8 @@ static Rect findBiggest(const u8* input, int M, int N, int rowWidth) {
 	return { best_ll.x, max(0, best_ur.y), 1 + best_ur.x - best_ll.x, 1 + best_ll.y - best_ur.y };
 }
 
-Rect findBiggest(const u8* input, int width, int height) {
-	return findBiggest(input, width, height, width);
+Rect FindBiggest(const u8* pInput, int pWidth, int pHeight) {
+	return FindBiggest(pInput, pWidth, pHeight, pWidth);
 }
 
 /** Find biggest rectangle, then recursively search area to the left/right and to the top/bottom of that rectangle
@@ -78,47 +78,47 @@ Rect findBiggest(const u8* input, int width, int height) {
 	@param search: limit searching for the following area
 	@param output: may be NULL, then the function will only return the area size
 */
-
-static long long findRectsInArea(const u8* input, int rowWidth, u16* output, Rect search) {
-	if (search.w < 1 || search.h < 1) {
+static long long FindRectsInArea(const u8* pInput, int pRowWidth, u16* pOutput, Rect pSearch) {
+	if (pSearch.w < 1 || pSearch.h < 1) {
 		return 0; // We reached a size limit
 	}
-	Rect biggest = findBiggest(input + search.y * rowWidth + search.x, search.w, search.h, rowWidth);
+	Rect biggest = FindBiggest(pInput + pSearch.y * pRowWidth + pSearch.x, pSearch.w, pSearch.h, pRowWidth);
 
 	if (biggest.w < 1 || biggest.h < 1) {
 		return 0; // No rectangles here
 	}
-	biggest.x += search.x;
-	biggest.y += search.y;
+	biggest.x += pSearch.x;
+	biggest.y += pSearch.y;
 	if (biggest.w > USHRT_MAX) biggest.w = USHRT_MAX;
 	if (biggest.h > USHRT_MAX) biggest.h = USHRT_MAX;
 
-	if (output != NULL) {
+	if (pOutput != NULL) {
 		for (int y = biggest.y; y < biggest.y + biggest.h; y++) {
 			for (int x = biggest.x; x < biggest.x + biggest.w; x++) {
-				output[(y * rowWidth + x) * 2] = 0;
-				output[(y * rowWidth + x) * 2 + 1] = 0;
+				pOutput[(y * pRowWidth + x) * 2] = 0;
+				pOutput[(y * pRowWidth + x) * 2 + 1] = 0;
 			}
 		}
-		output[(biggest.y * rowWidth + biggest.x) * 2] = biggest.w;
-		output[(biggest.y * rowWidth + biggest.x) * 2 + 1] = biggest.h;
+		pOutput[(biggest.y * pRowWidth + biggest.x) * 2] = biggest.w;
+		pOutput[(biggest.y * pRowWidth + biggest.x) * 2 + 1] = biggest.h;
 	}
 
 		return (long long)biggest.w * biggest.h +
-			findRectsInArea(input, rowWidth, output, { search.x, search.y, biggest.x - search.x, search.h }) +
-			findRectsInArea(input, rowWidth, output, { biggest.x + biggest.w, search.y, search.x + search.w - biggest.x - biggest.w, search.h }) +
-			findRectsInArea(input, rowWidth, output, { biggest.x, search.y, biggest.w, biggest.y - search.y }) +
-			findRectsInArea(input, rowWidth, output, { biggest.x, biggest.y + biggest.h, biggest.w, search.y + search.h - biggest.y - biggest.h });
+			FindRectsInArea(pInput, pRowWidth, pOutput, { pSearch.x, pSearch.y, biggest.x - pSearch.x, pSearch.h }) +
+			FindRectsInArea(pInput, pRowWidth, pOutput, { biggest.x + biggest.w, pSearch.y, pSearch.x + pSearch.w - biggest.x - biggest.w, pSearch.h }) +
+			FindRectsInArea(pInput, pRowWidth, pOutput, { biggest.x, pSearch.y, biggest.w, biggest.y - pSearch.y }) +
+			FindRectsInArea(pInput, pRowWidth, pOutput, { biggest.x, biggest.y + biggest.h, biggest.w, pSearch.y + pSearch.h - biggest.y - biggest.h });
 }
 
-long long findAll(const u8* input, int width, int height, u16* output) {
-	return findRectsInArea(input, width, output, { 0, 0, width, height });
+long long FindAll(const u8* pInput, int pWidth, int pHeight, u16* pOutput) {
+	return FindRectsInArea(pInput, pWidth, pOutput, { 0, 0, pWidth, pHeight });
 }
 
 static void GetLevelCollisionMask(cute_tiled_map_t* pMap, cute_tiled_layer_t* pLayer, MemoryStack* pStack)
 {
 	u8* map = PushZerodArray(pStack, u8, pMap->width * pMap->height);
 
+	//Mark solid tiles
 	cute_tiled_tileset_t* tiles = pMap->tilesets;
 	while (tiles)
 	{
@@ -147,9 +147,11 @@ static void GetLevelCollisionMask(cute_tiled_map_t* pMap, cute_tiled_layer_t* pL
 		tiles = tiles->next;
 	}
 
+	//Find the largest rectangles within the collision array
 	u16* output = PushZerodArray(pStack, u16, pMap->width * pMap->height * 2);
-	findAll(map, pMap->width, pMap->height, output);
+	FindAll(map, pMap->width, pMap->height, output);
 
+	//Create walls for each rectangle
 	for (int y = 0; y < pMap->height; y++) {
 		for (int x = 0; x < pMap->width; x++) {
 			u16 width = output[(y * pMap->width + x) * 2];

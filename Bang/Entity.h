@@ -52,7 +52,7 @@ struct Entity
 	ENTITY_TYPES type;
 
 #ifndef _SERVER
-	virtual void Render(RenderState* pState) = 0;
+	virtual void Render(RenderState* pState, bool pOutline) = 0;
 #endif
 	virtual void Update(GameState* pState, float pDeltaTime, CurrentInput pInput) = 0;
 };
@@ -122,7 +122,6 @@ struct Player : public Entity
 	//Local state
 	AnimatedBitmap bitmap;
 	bool flip;
-	bool highlight;
 	Timer invuln_timer;
 	bool death_message_sent;
 
@@ -136,13 +135,13 @@ struct Player : public Entity
 	PlayingSound* walking;
 
 	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
-	void Render(RenderState* pState);
+	void Render(RenderState* pState, bool pOutline);
 };
 
 struct Wall : public Entity 
 { 
 	void Update(GameState* pState, float pDeltatime, CurrentInput pInput) { }
-	void Render(RenderState* pState) { }
+	void Render(RenderState* pState, bool pOutline) { }
 };
 
 struct Beer : public Entity
@@ -151,7 +150,7 @@ struct Beer : public Entity
 	float life;
 	v2 original_pos;
 	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
-	void Render(RenderState* pState);
+	void Render(RenderState* pState, bool pOutline);
 };
 
 struct Arrows : public Entity
@@ -160,13 +159,13 @@ struct Arrows : public Entity
 	ParticleSystem system;
 	float life;
 	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
-	void Render(RenderState* pState);
+	void Render(RenderState* pState, bool pOutline);
 };
 
 struct Dynamite : public Entity
 {
 	void Update(GameState* pState, float pDeltatime, CurrentInput pInput);
-	void Render(RenderState* pState);
+	void Render(RenderState* pState, bool pOutline);
 };
 
 struct SpawnBeerEvent;

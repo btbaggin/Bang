@@ -44,7 +44,7 @@ void Arrows::Update(GameState* pState, float pDeltatime, CurrentInput pInput)
 }
 
 #ifndef _SERVER
-void Arrows::Render(RenderState* pState)
+void Arrows::Render(RenderState* pState, bool pOutline)
 {
 	float range = GetSetting(&g_state.config, "arrow_radius")->f;
 	PushEllipse(pState, position, V2(range), V4(1, 0, 0, 0.3F));

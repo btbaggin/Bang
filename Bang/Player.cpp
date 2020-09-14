@@ -32,16 +32,19 @@ static void DamagePlayer(Player* pPlayer)
 
 static void HealPlayer(Player* pPlayer)
 {
-	u32 max_health = GetSetting(&g_state.config, "player_health")->i;
-	pPlayer->state.health++;
-	if (pPlayer->state.health > max_health) pPlayer->state.health = max_health;
+	if (pPlayer->state.health > 0)
+	{
+		u32 max_health = GetSetting(&g_state.config, "player_health")->i;
+		pPlayer->state.health++;
+		if (pPlayer->state.health > max_health) pPlayer->state.health = max_health;
+	}
 }
 
 PARTICLE_UPDATE(UpdateDustParticles)
 {
 	pParticle->size -= pDeltaTime * 2;
 	if (pParticle->size <= 0) pParticle->size = 0;
-	pParticle->a -= min(pParticle->a, Random((u32)6, 9));
+	pParticle->a -= min(pParticle->a, Random((u32)3, 7));
 }
 
 static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
@@ -58,7 +61,7 @@ static Player* CreatePlayer(GameState* pState, GameNetState* pNet, char* pName)
 	options->direction = V2(0, -1);
 	options->life = { 0.25F, 0.5F };
 	options->size = { pState->map->tile_size.Width * 0.25F, pState->map->tile_size.Width * 0.75F };
-	options->speed = { 1, 5 };
+	options->speed = { 3, 6 };
 	options->spawn_radius = 5;
 	options->spread = 1;
 	p->dust = SpawnParticleSystem(10, 15, BITMAP_Dust, options);
@@ -98,6 +101,7 @@ void Player::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 	{
 		float speed = GetSetting(&g_state.config, "player_speed")->f * pState->map->tile_size.Width;
 		Entity* interact = GetEntityUnderMouse(&pState->entities, pInput.mouse);
+		u32 range = GetSetting(&pState->config, "player_attack_range")->i;
 
 		bool attacking = false;
 		v2 velocity = {};
@@ -135,7 +139,7 @@ void Player::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 			case ENTITY_TYPE_Beer:
 				if (local_state.beers < MAX_BEERS)
 				{
-					if (interact && HMM_LengthSquared(interact->position - position) < 32 * 32)
+					if (interact && HMM_LengthSquared(interact->position - position) < range * range)
 					{
 						local_state.beers++;
 						RemoveEntity(&pState->entities, interact);
@@ -145,7 +149,6 @@ void Player::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 
 			case ENTITY_TYPE_Player:
 				Player* p = (Player*)interact;
-				u32 range = GetSetting(&pState->config, "player_attack_range")->i;
 				if (p != this && p->team == state.team_attack_choice && HMM_LengthSquared(p->position - position) < range * range)
 				{
 					PlaySound(g_transstate.assets, SOUND_Sword, 1.0F, this);
@@ -179,7 +182,6 @@ void Player::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 			{
 				SetAnimation(&bitmap, flip ? PLAYER_ANIMATION_WalkLeft : PLAYER_ANIMATION_WalkRight, 0.25F);
 			}
-
 		}
 		UpdateAnimation(&bitmap, pDeltaTime);
 		state.animation = bitmap.current_animation;
@@ -213,7 +215,7 @@ void Player::Update(GameState* pState, float pDeltaTime, CurrentInput pInput)
 };
 
 #ifndef _SERVER
-void Player::Render(RenderState* pState)
+void Player::Render(RenderState* pState, bool pOutline)
 {
 	const float MARGIN = 5.0F;
 	const float HEADER_HEIGHT = g_state.map->tile_size.Height * 0.66F;
@@ -236,6 +238,7 @@ void Player::Render(RenderState* pState)
 		color = GetSetting(&g_state.config, "sheriff_color")->V4;
 		break;
 	case PLAYER_ROLE_Unknown:
+		color = GetSetting(&g_state.config, "unknown_color")->V4;
 		break;
 	}
 
@@ -261,18 +264,9 @@ void Player::Render(RenderState* pState)
 		color = team_colors[team];
 		//Player
 		PushEllipse(pState, position + V2(scale.Width / 2, scale.Height), V2(scale.Width / 3, scale.Height / 6), SHADOW_COLOR);
-		PushParticleSystem(pState, &dust);
 		RenderAnimation(pState, position, scale, color, &bitmap);
-		if (highlight)
-		{
-			//Better way to outline https://learnopengl.com/Advanced-OpenGL/Stencil-testing
-			//I could use this if I ended up outlining more things. Would need to store a matrix on Renderable_Quad instead of chaging the vertices directly
-			//RenderAnimation(pState, position - V2(3), scale + V2(6), V4(1, 0, 0, 1), &bitmap);
-			highlight = false;
-			//PushOutline(pState, 3);
-		}
+		if (pOutline) PushOutline(pState, 3);
+		PushParticleSystem(pState, &dust);
 	}
-
-	//SetZLayer(pState, Z_LAYER_Ui);
 }
 #endif

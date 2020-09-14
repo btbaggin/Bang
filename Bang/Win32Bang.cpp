@@ -326,8 +326,7 @@ static void RenderGameElements(GameState* pState, RenderState* pRender)
 		Entity* e = pState->entities.entities[i];
 		if (IsEntityValid(&pState->entities, e))
 		{
-			e->Render(pRender);
-			if (interact == e) PushOutline(pRender, 3);
+			e->Render(pRender, interact == e);
 		}
 	}
 }

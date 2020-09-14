@@ -3,29 +3,43 @@
 #pragma comment(lib, "ws2_32")
 
 //https://www.codersblock.org/blog/multiplayer-fps-part-3
-const float CLIENT_TIMEOUT = 15.0F;
+const float PING_TIME = 5.0F;
+const float CLIENT_TIMEOUT = PING_TIME * 3;
 const u32 SOCKET_BUFFER_SIZE = 1024;
 const u32 PORT = 11000;
 const u32 MAX_PREDICTION_BUFFER = 128; //128 is just over 2 seconds for latency assuming 60fps
 const u32 PREDICTION_BUFFER_MASK = MAX_PREDICTION_BUFFER - 1;
+#define ALLOW_PARTIAL_GAMES _DEBUG 
 
 enum CLIENT_MESSAGES : u8
 {
+	//Request to join the server
 	CLIENT_MESSAGE_Join,
+	//Send current frames input to the server
 	CLIENT_MESSAGE_Input,
+	//Ping every X seconds so the server knows we are still present
 	CLIENT_MESSAGE_Ping,
+	//Tell the server we are leaving the game
 	CLIENT_MESSAGE_Leave,
+	//Request the server to start the game
 	CLIENT_MESSAGE_GameStart
 };
 
 enum SERVER_MESSAGES : u8
 {
+	//Reply when a client attempts to join the server
 	SERVER_MESSAGE_JoinResult,
+	//Announcement to all players that someone joined
 	SERVER_MESSAGE_JoinAnnouncement,
+	//Annoucement to all players that the game has started
 	SERVER_MESSAGE_GameStartAnnoucement,
+	//Game state updates
 	SERVER_MESSAGE_State,
+	//Tell all players that someone has died, reveals their role
 	SERVER_MESSAGE_PlayerDied,
+	//Tell all players that the game is over
 	SERVER_MESSAGE_GameOver,
+	//Annoucement to all players that someone has left
 	SERVER_MESSAGE_LeaveAnnoucement,
 };
 
@@ -110,6 +124,7 @@ struct GameNetState
 	u8 client_id;
 	IPEndpoint server_ip;
 	u32 latency_ms[UPDATE_FREQUENCY];
+	Timer ping_timer;
 #endif
 };
 
